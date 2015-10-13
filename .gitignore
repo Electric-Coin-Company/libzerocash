@@ -100,3 +100,5 @@ depsrc/
 depinst/
 
 Makefile.*
+zerocash_pour_ppzksnark/profiling/profile_zerocash_pour_gadget
+zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark
