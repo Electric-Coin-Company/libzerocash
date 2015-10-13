@@ -1,0 +1,9 @@
+language: cpp
+
+before_install:
+  - sudo apt-get install -y libgmp-dev libssl-dev libgtest-dev libboost libcrypto++-dev libboost-program-options-dev
+
+script:
+  - LIBSNARK_FLAGS="NO_PROCPS=1 NO_GTEST=1 NO_DOCS=1 STATIC=1" ./get-libsnark
+  - NO_PROCPS=1 MINDEPS=1 make
+  - ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark
