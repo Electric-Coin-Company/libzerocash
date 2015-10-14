@@ -36,6 +36,6 @@ before_install:
 script:
   - LDFLAGS="-lrt" LIBSNARK_FLAGS="$ZCTRAVIS_SNARK_FLAGS" ./get-libsnark
   - CXXFLAGS="$ZCTRAVIS_LIBZEROCASH_CXXFLAGS" make $ZCTRAVIS_LIBZEROCASH_FLAGS
-  - ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark
-  - ./tests/merkleTest
-  - ./tests/zerocashTest
+#  - ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark
+#  - ./tests/merkleTest
+#  - ./tests/zerocashTest
