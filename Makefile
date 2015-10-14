@@ -8,7 +8,13 @@ LIBZEROCASH=libzerocash
 UTILS=$(LIBZEROCASH)/utils
 TESTUTILS=tests
 LDLIBS += -L $(DEPINST)/lib -Wl,-rpath $(DEPINST)/lib -L . -lsnark -lzm -lgmpxx -lgmp
-LDLIBS += -lboost_system-mt -lcrypto -lcryptopp
+ifeq ($(USE_MT),1)
+	LDLIBS += -lboost_system-mt
+else
+	LDLIBS += -lboost_system
+endif
+
+LDLIBS += -lcrypto -lcryptopp
 CXXFLAGS += -I $(DEPINST)/include -I $(DEPINST)/include/libsnark -I . -DUSE_ASM -DCURVE_ALT_BN128
 
 LIBPATH = /usr/local/lib
