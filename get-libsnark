@@ -14,7 +14,7 @@ DEPINST=`pwd -P`/$DEPINST  # remember absolute path
 mkdir -p $DEPSRC
 cd $DEPSRC
 
-[ ! -d libsnark ] && git clone https://github.com/scipr-lab/libsnark libsnark
+[ ! -d libsnark ] && git clone https://github.com/ebfull/libsnark libsnark
 cd libsnark
 git pull
 # TODO: submit -fPIC patch to ate-pairing
