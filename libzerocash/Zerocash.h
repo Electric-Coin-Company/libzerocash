@@ -14,6 +14,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include "streams.h"
 
 #define ZEROCASH_VERSION_STRING             "0.1"
 #define ZEROCASH_VERSION_INT				1
