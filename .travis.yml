@@ -7,6 +7,12 @@ env:
     - ZCTRAVIS_SNARK_FLAGS="-j4 CURVE=ALT_BN128 NO_PROCPS=1 NO_GTEST=1 NO_DOCS=1 STATIC=1"
     - ZCTRAVIS_LIBZEROCASH_CXXFLAGS="-DCURVE_ALT_BN128 -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -std=c++11 -pipe -O2 -O0 -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fPIC"
     - ZCTRAVIS_LIBZEROCASH_FLAGS="-j4 NO_PROCPS=1 MINDEPS=1 LINK_RT=1"
+  matrix:
+    - POUR_PARAMS="2 2 4"
+    - POUR_PARAMS="2 3 4"
+    - POUR_PARAMS="3 2 4"
+    - POUR_PARAMS="3 3 4"
+    - POUR_PARAMS="2 2 32"
 
 before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y # For g++-4.9
@@ -33,9 +39,11 @@ before_install:
   - sudo make install
   - cd ..
 
-script:
+install:
   - LDFLAGS="-lrt" LIBSNARK_FLAGS="$ZCTRAVIS_SNARK_FLAGS" ./get-libsnark
   - CXXFLAGS="$ZCTRAVIS_LIBZEROCASH_CXXFLAGS" make $ZCTRAVIS_LIBZEROCASH_FLAGS
-#  - ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark
+
+script:
+  - ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark $POUR_PARAMS
 #  - ./tests/merkleTest
 #  - ./tests/zerocashTest
