@@ -1,5 +1,10 @@
 os: linux
 
+cache:
+  directories:
+    - boost_1_57_0
+    - cryptopp562
+
 env:
   global:
     - ZCTRAVIS_BOOST_OPTS="threading=multi link=static -sNO_BZIP2=1 -sNO_ZLIB=1 address-model=64"
@@ -23,28 +28,20 @@ before_install:
   # Install dependencies
   - sudo apt-get install cmake libgmp-dev libssl-dev
   # We still need boost, let's get it.
-  - wget http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2
-  - echo "910c8c022a33ccec7f088bd65d4f14b466588dda94ba2124e78b8c57db264967  boost_1_57_0.tar.bz2" | sha256sum -c
-  - tar -xjf boost_*.tar.bz2
-  - cd boost_1_57_0
-  - ./bootstrap.sh --without-icu --with-libraries="$ZCTRAVIS_BOOST_LIBRARIES"
-  - ./b2 -d2 -j2 -d1 $ZCTRAVIS_BOOST_OPTS
-  - sudo ./b2 -d0 -j4 $ZCTRAVIS_BOOST_OPTS install
-  - cd ..
-  # We still need crypto++, let's get it.
-  - mkdir cryptopp562 && cd cryptopp562
-  - wget http://www.cryptopp.com/cryptopp562.zip
-  - echo "5cbfd2fcb4a6b3aab35902e2e0f3b59d9171fee12b3fc2b363e1801dfec53574  cryptopp562.zip" | sha256sum -c
-  - unzip cryptopp562.zip
-  - make -j8 static CXXFLAGS='-DNDEBUG -g -O2 -fPIC'
-  - sudo make install
-  - cd ..
+  - if [ ! -d "boost_1_57_0" ]; then ./get-boost; fi
+  - cd boost_1_57_0 && sudo ./b2 -d0 -j4 $ZCTRAVIS_BOOST_OPTS install && cd ..
+  - if [ ! -d "cryptopp562" ]; then ./get-crypto; fi
+  - cd cryptopp562 && sudo make install && cd ..
 
 install:
   - LDFLAGS="-lrt" LIBSNARK_FLAGS="$ZCTRAVIS_SNARK_FLAGS" ./get-libsnark
   - CXXFLAGS="$ZCTRAVIS_LIBZEROCASH_CXXFLAGS" make $ZCTRAVIS_LIBZEROCASH_FLAGS
 
 script:
-  - if [ ! -z "$POUR_PARAMS" ]; then ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark $POUR_PARAMS; fi
-  - if [ ! -z "$DO_ZEROCASH_TEST"]; then ./tests/zerocashTest; fi
+#  - if [ ! -z "$POUR_PARAMS" ]; then ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark $POUR_PARAMS; fi
+#  - if [ ! -z "$DO_ZEROCASH_TEST"]; then ./tests/zerocashTest; fi
 #  - ./tests/merkleTest
+
+# just curious:
+   - free -m
+   - df -h

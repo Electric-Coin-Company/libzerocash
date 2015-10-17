@@ -1,0 +1,9 @@
+#!/bin/bash
+
+wget http://downloads.sourceforge.net/project/boost/boost/1.57.0/boost_1_57_0.tar.bz2
+echo "910c8c022a33ccec7f088bd65d4f14b466588dda94ba2124e78b8c57db264967  boost_1_57_0.tar.bz2" | sha256sum -c
+tar -xjf boost_*.tar.bz2
+
+cd boost_1_57_0
+./bootstrap.sh --without-icu --with-libraries="$ZCTRAVIS_BOOST_LIBRARIES"
+./b2 -d2 -j2 -d1 $ZCTRAVIS_BOOST_OPTS
