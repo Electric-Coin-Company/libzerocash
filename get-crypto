@@ -1,0 +1,7 @@
+#!/bin/bash
+
+mkdir cryptopp562 && cd cryptopp562
+wget http://www.cryptopp.com/cryptopp562.zip
+echo "5cbfd2fcb4a6b3aab35902e2e0f3b59d9171fee12b3fc2b363e1801dfec53574  cryptopp562.zip" | sha256sum -c
+unzip cryptopp562.zip
+make -j2 static CXXFLAGS='-DNDEBUG -g -O2 -fPIC'

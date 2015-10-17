@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <random>
 #include <set>
+#include <sstream>
 #include <vector>
 
 #include "libsnark/common/default_types/r1cs_ppzksnark_pp.hpp"
@@ -312,9 +313,33 @@ int main(int argc, const char * argv[])
 {
     start_profiling();
     default_r1cs_ppzksnark_pp::init_public_params();
-    test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(2, 2, 4);
-    test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(2, 3, 4);
-    test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(3, 2, 4);
-    test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(3, 3, 4);
-    test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(2, 2, 32);
+
+    unsigned int a;
+    unsigned int b;
+    unsigned int c;
+
+    {
+        std::istringstream ss(argv[1]);
+        ss >> a;
+    }
+
+    {
+        std::istringstream ss(argv[2]);
+        ss >> b;
+    }
+
+    {
+        std::istringstream ss(argv[3]);
+        ss >> c;
+    }
+
+    printf("Testing pour with [%d, %d, %d]\n", a, b, c);
+
+    test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(a, b, c);
+
+    //test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(2, 2, 4);
+    //test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(2, 3, 4);
+    //test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(3, 2, 4);
+    //test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(3, 3, 4);
+    //test_zerocash_pour_ppzksnark<default_r1cs_ppzksnark_pp>(2, 2, 32);
 }
