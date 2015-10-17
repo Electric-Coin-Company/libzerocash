@@ -16,7 +16,7 @@ cd $DEPSRC
 
 [ ! -d libsnark ] && git clone https://github.com/scipr-lab/libsnark libsnark
 cd libsnark
-git checkout 3f202f173a560b2280f28ab16262b27cef5366d3
+git checkout $ZCTRAVIS_SNARK_CHECKOUT
 # TODO: submit -fPIC patch to ate-pairing
 INC_DIR=-fPIC ./prepare-depends.sh
 make clean
@@ -25,3 +25,4 @@ make install PREFIX=$DEPINST $LIBSNARK_FLAGS
 cd ..
 
 cd ..
+touch "$DEPINST/.$ZCTRAVIS_SNARK_CHECKOUT"

@@ -4,12 +4,14 @@ cache:
   directories:
     - boost_1_57_0
     - cryptopp562
+    - depinst
 
 env:
   global:
+    - ZCTRAVIS_SNARK_CHECKOUT="3f202f173a560b2280f28ab16262b27cef5366d3"
     - ZCTRAVIS_BOOST_OPTS="threading=multi link=static -sNO_BZIP2=1 -sNO_ZLIB=1 address-model=64"
     - ZCTRAVIS_BOOST_LIBRARIES="chrono,filesystem,program_options,system,thread,test"
-    - ZCTRAVIS_SNARK_FLAGS="-j2 CURVE=ALT_BN128 NO_PROCPS=1 NO_GTEST=1 NO_DOCS=1 STATIC=1"
+    - LIBSNARK_FLAGS="-j2 CURVE=ALT_BN128 NO_PROCPS=1 NO_GTEST=1 NO_DOCS=1 STATIC=1"
     - ZCTRAVIS_LIBZEROCASH_CXXFLAGS="-DCURVE_ALT_BN128 -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -std=c++11 -pipe -O2 -O0 -g -Wstack-protector -fstack-protector-all -fPIE -fvisibility=hidden -fPIC"
     - ZCTRAVIS_LIBZEROCASH_FLAGS="-j2 NO_PROCPS=1 MINDEPS=1 LINK_RT=1 LOWMEM=1"
   matrix:
@@ -29,19 +31,15 @@ before_install:
   - sudo apt-get install cmake libgmp-dev libssl-dev
   # We still need boost, let's get it.
   - if [ ! -d "boost_1_57_0" ]; then ./get-boost; fi
-  - cd boost_1_57_0 && sudo ./b2 -d0 -j4 $ZCTRAVIS_BOOST_OPTS install && cd ..
+  - cd boost_1_57_0 && sudo ./b2 -d0 -j2 $ZCTRAVIS_BOOST_OPTS install && cd ..
   - if [ ! -d "cryptopp562" ]; then ./get-crypto; fi
   - cd cryptopp562 && sudo make install && cd ..
 
 install:
-  - LDFLAGS="-lrt" LIBSNARK_FLAGS="$ZCTRAVIS_SNARK_FLAGS" ./get-libsnark
+  - if [ ! -f "depinst/.$ZCTRAVIS_SNARK_CHECKOUT" ]; then LDFLAGS="-lrt" ./get-libsnark; fi
   - CXXFLAGS="$ZCTRAVIS_LIBZEROCASH_CXXFLAGS" make $ZCTRAVIS_LIBZEROCASH_FLAGS
 
 script:
 #  - if [ ! -z "$POUR_PARAMS" ]; then ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark $POUR_PARAMS; fi
 #  - if [ ! -z "$DO_ZEROCASH_TEST"]; then ./tests/zerocashTest; fi
 #  - ./tests/merkleTest
-
-# just curious:
-   - free -m
-   - df -h
