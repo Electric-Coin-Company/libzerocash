@@ -1,5 +1,8 @@
 os: linux
 
+sudo: required
+dist: trusty
+
 env:
   global:
     - ZCTRAVIS_BOOST_OPTS="threading=multi link=static -sNO_BZIP2=1 -sNO_ZLIB=1 address-model=64"
