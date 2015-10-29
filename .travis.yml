@@ -30,6 +30,7 @@ before_install:
   # We still need crypto++, let's get it.
   - ./get-cryptopp
 
+
 script:
   - LIBSNARK_FLAGS="$ZCTRAVIS_SNARK_FLAGS" ./get-libsnark
   - CXXFLAGS="$ZCTRAVIS_LIBZEROCASH_CXXFLAGS" make $ZCTRAVIS_LIBZEROCASH_FLAGS
