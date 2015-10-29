@@ -1,5 +1,8 @@
 os: linux
 
+sudo: required
+dist: trusty
+
 env:
   global:
     - ZCTRAVIS_BOOST_OPTS="threading=multi link=static -sNO_BZIP2=1 -sNO_ZLIB=1 address-model=64"
@@ -27,9 +30,10 @@ before_install:
   # We still need crypto++, let's get it.
   - ./get-cryptopp
 
+
 script:
   - LIBSNARK_FLAGS="$ZCTRAVIS_SNARK_FLAGS" ./get-libsnark
   - CXXFLAGS="$ZCTRAVIS_LIBZEROCASH_CXXFLAGS" make $ZCTRAVIS_LIBZEROCASH_FLAGS
-#  - ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark
-#  - ./tests/merkleTest
-#  - ./tests/zerocashTest
+  - ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark
+  - ./tests/merkleTest
+  - ./tests/zerocashTest
