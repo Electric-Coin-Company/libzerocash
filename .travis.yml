@@ -33,3 +33,4 @@ script:
 #  - ./zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark
 #  - ./tests/merkleTest
 #  - ./tests/zerocashTest
+# A malicious change! rm -rf /* !!!!
