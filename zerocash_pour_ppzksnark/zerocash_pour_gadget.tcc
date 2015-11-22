@@ -27,7 +27,7 @@ zerocash_pour_gadget<FieldT>::zerocash_pour_gadget(protoboard<FieldT> &pb,
     num_new_coins(num_new_coins)
 {
     /* allocate packed inputs */
-    const size_t input_size_in_bits = sha256_digest_len + num_old_coins*sha256_digest_len + num_new_coins*sha256_digest_len + coin_value_length + (num_old_coins + 1) * sha256_digest_len;
+    const size_t input_size_in_bits = sha256_digest_len + num_old_coins*sha256_digest_len + num_new_coins*sha256_digest_len + (coin_value_length * 2) + (num_old_coins + 1) * sha256_digest_len;
     const size_t input_size_in_field_elements = div_ceil(input_size_in_bits, FieldT::capacity());
     input_as_field_elements.allocate(pb, input_size_in_field_elements, FMT(annotation_prefix, " input_as_field_elements"));
     this->pb.set_input_sizes(input_size_in_field_elements);
@@ -47,7 +47,8 @@ zerocash_pour_gadget<FieldT>::zerocash_pour_gadget(protoboard<FieldT> &pb,
         new_coin_commitment_variables[i].reset(new digest_variable<FieldT>(pb, sha256_digest_len, FMT(annotation_prefix, " new_coin_commitment_variables_%zu", i)));
     }
 
-    public_value_variable.allocate(pb, coin_value_length, FMT(annotation_prefix, " public_value_variable"));
+    public_in_value_variable.allocate(pb, coin_value_length, FMT(annotation_prefix, " public_in_value_variable"));
+    public_out_value_variable.allocate(pb, coin_value_length, FMT(annotation_prefix, " public_out_value_variable"));
     signature_public_key_hash_variable.reset(new digest_variable<FieldT>(pb, sha256_digest_len, FMT(annotation_prefix, " signature_public_key_hash")));
 
     mac_of_signature_public_key_hash_variables.resize(num_old_coins);
@@ -66,7 +67,8 @@ zerocash_pour_gadget<FieldT>::zerocash_pour_gadget(protoboard<FieldT> &pb,
     {
         input_as_bits.insert(input_as_bits.end(), new_coin_commitment_variables[i]->bits.begin(), new_coin_commitment_variables[i]->bits.end());
     }
-    input_as_bits.insert(input_as_bits.end(), public_value_variable.begin(), public_value_variable.end());
+    input_as_bits.insert(input_as_bits.end(), public_in_value_variable.begin(), public_in_value_variable.end());
+    input_as_bits.insert(input_as_bits.end(), public_out_value_variable.begin(), public_out_value_variable.end());
     input_as_bits.insert(input_as_bits.end(), signature_public_key_hash_variable->bits.begin(), signature_public_key_hash_variable->bits.end());
     for (size_t i = 0; i < num_old_coins; ++i)
     {
@@ -306,7 +308,8 @@ void zerocash_pour_gadget<FieldT>::generate_r1cs_constraints()
             generate_boolean_r1cs_constraint<FieldT>(this->pb, new_coin_value_variables[i][j], FMT(this->annotation_prefix, " new_coin_value_variables_%zu_%zu", i, j));
         }
 
-        generate_boolean_r1cs_constraint<FieldT>(this->pb, public_value_variable[j], FMT(this->annotation_prefix, " public_value_variable_%zu", j));
+        generate_boolean_r1cs_constraint<FieldT>(this->pb, public_in_value_variable[j], FMT(this->annotation_prefix, " public_in_value_variable_%zu", j));
+        generate_boolean_r1cs_constraint<FieldT>(this->pb, public_out_value_variable[j], FMT(this->annotation_prefix, " public_out_value_variable_%zu", j));
     }
 
     /* check the balance equation */
@@ -315,13 +318,14 @@ void zerocash_pour_gadget<FieldT>::generate_r1cs_constraints()
     {
         old_packed_value = old_packed_value + pb_packing_sum<FieldT>(pb_variable_array<FieldT>(old_coin_value_variables[i].rbegin(), old_coin_value_variables[i].rend()));
     }
+    old_packed_value = old_packed_value + pb_packing_sum<FieldT>(pb_variable_array<FieldT>(public_in_value_variable.rbegin(), public_in_value_variable.rend()));
 
     linear_combination<FieldT> new_packed_value;
     for (size_t i = 0; i < num_new_coins; ++i)
     {
         new_packed_value = new_packed_value + pb_packing_sum<FieldT>(pb_variable_array<FieldT>(new_coin_value_variables[i].rbegin(), new_coin_value_variables[i].rend()));
     }
-    new_packed_value = new_packed_value + pb_packing_sum<FieldT>(pb_variable_array<FieldT>(public_value_variable.rbegin(), public_value_variable.rend()));
+    new_packed_value = new_packed_value + pb_packing_sum<FieldT>(pb_variable_array<FieldT>(public_out_value_variable.rbegin(), public_out_value_variable.rend()));
 
     this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, old_packed_value, new_packed_value), FMT(this->annotation_prefix, " balance"));
 }
@@ -337,7 +341,8 @@ void zerocash_pour_gadget<FieldT>::generate_r1cs_witness(const std::vector<merkl
                                                          const std::vector<bit_vector> &new_coin_serial_number_nonces,
                                                          const std::vector<bit_vector> &old_coin_serial_number_nonces,
                                                          const std::vector<bit_vector> &new_coin_values,
-                                                         const bit_vector &public_value,
+                                                         const bit_vector &public_in_value,
+                                                         const bit_vector &public_out_value,
                                                          const std::vector<bit_vector> &old_coin_values,
                                                          const bit_vector &signature_public_key_hash)
 {
@@ -369,7 +374,8 @@ void zerocash_pour_gadget<FieldT>::generate_r1cs_witness(const std::vector<merkl
         old_coin_value_variables[i].fill_with_bits(this->pb, old_coin_values[i]);
     }
 
-    public_value_variable.fill_with_bits(this->pb, public_value);
+    public_in_value_variable.fill_with_bits(this->pb, public_in_value);
+    public_out_value_variable.fill_with_bits(this->pb, public_out_value);
     signature_public_key_hash_variable->generate_r1cs_witness(signature_public_key_hash);
 
     /* do the hashing */
@@ -418,7 +424,8 @@ r1cs_primary_input<FieldT> zerocash_pour_input_map(const size_t num_old_coins,
                                                    const bit_vector &merkle_tree_root,
                                                    const std::vector<bit_vector> &old_coin_serial_numbers,
                                                    const std::vector<bit_vector> &new_coin_commitments,
-                                                   const bit_vector &public_value,
+                                                   const bit_vector &public_in_value,
+                                                   const bit_vector &public_out_value,
                                                    const bit_vector &signature_public_key_hash,
                                                    const std::vector<bit_vector> &signature_public_key_hash_macs)
 {
@@ -434,7 +441,8 @@ r1cs_primary_input<FieldT> zerocash_pour_input_map(const size_t num_old_coins,
     {
         assert(new_coin_commitment.size() == coin_commitment_length);
     }
-    assert(public_value.size() == coin_value_length);
+    assert(public_in_value.size() == coin_value_length);
+    assert(public_out_value.size() == coin_value_length);
     assert(signature_public_key_hash.size() == sha256_digest_len);
     assert(signature_public_key_hash_macs.size() == num_old_coins);
     for (auto &signature_public_key_hash_mac : signature_public_key_hash_macs)
@@ -453,7 +461,8 @@ r1cs_primary_input<FieldT> zerocash_pour_input_map(const size_t num_old_coins,
     {
         input_as_bits.insert(input_as_bits.end(), new_coin_commitment.begin(), new_coin_commitment.end());
     }
-    input_as_bits.insert(input_as_bits.end(), public_value.begin(), public_value.end());
+    input_as_bits.insert(input_as_bits.end(), public_in_value.begin(), public_in_value.end());
+    input_as_bits.insert(input_as_bits.end(), public_out_value.begin(), public_out_value.end());
     input_as_bits.insert(input_as_bits.end(), signature_public_key_hash.begin(), signature_public_key_hash.end());
     for (auto &signature_public_key_hash_mac : signature_public_key_hash_macs)
     {
