@@ -93,6 +93,7 @@ public:
     /* individual components of the unpacked R1CS input */
     std::shared_ptr<digest_variable<FieldT> > merkle_tree_root_variable;
     std::vector<std::shared_ptr<digest_variable<FieldT> > > old_coin_serial_number_variables;
+    pb_variable_array<FieldT> old_coin_enforce_commitment;
     std::vector<std::shared_ptr<digest_variable<FieldT> > > new_coin_commitment_variables;
     pb_variable_array<FieldT> public_in_value_variable;
     pb_variable_array<FieldT> public_out_value_variable;

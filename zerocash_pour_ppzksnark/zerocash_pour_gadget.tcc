@@ -35,6 +35,7 @@ zerocash_pour_gadget<FieldT>::zerocash_pour_gadget(protoboard<FieldT> &pb,
     /* allocate inputs */
     merkle_tree_root_variable.reset(new digest_variable<FieldT>(pb, sha256_digest_len, FMT(annotation_prefix, " merkle_tree_root_variable")));
 
+    old_coin_enforce_commitment.allocate(pb, num_old_coins, FMT(annotation_prefix, " old_coin_enforce_commitment"));
     old_coin_serial_number_variables.resize(num_old_coins);
     for (size_t i = 0; i < num_old_coins; ++i)
     {
@@ -262,7 +263,7 @@ zerocash_pour_gadget<FieldT>::zerocash_pour_gadget(protoboard<FieldT> &pb,
         old_coin_authentication_path_variables[i].reset(new merkle_authentication_path_variable<FieldT, sha256_two_to_one_hash_gadget<FieldT> >(pb, tree_depth, FMT(annotation_prefix, " old_coin_authentication_path_variables_%zu", i)));
         old_coin_commitments_in_tree[i].reset(new merkle_tree_check_read_gadget<FieldT, sha256_two_to_one_hash_gadget<FieldT> >(
                                                   pb, tree_depth, old_coin_merkle_tree_position_variables[i], *old_coin_commitment_variables[i], *merkle_tree_root_variable,
-                                                  *old_coin_authentication_path_variables[i], ONE, FMT(annotation_prefix, " old_coin_commitments_in_tree_%zu", i)));
+                                                  *old_coin_authentication_path_variables[i], old_coin_enforce_commitment[i], FMT(annotation_prefix, " old_coin_commitments_in_tree_%zu", i)));
     }
 }
 
@@ -310,6 +311,15 @@ void zerocash_pour_gadget<FieldT>::generate_r1cs_constraints()
 
         generate_boolean_r1cs_constraint<FieldT>(this->pb, public_in_value_variable[j], FMT(this->annotation_prefix, " public_in_value_variable_%zu", j));
         generate_boolean_r1cs_constraint<FieldT>(this->pb, public_out_value_variable[j], FMT(this->annotation_prefix, " public_out_value_variable_%zu", j));
+    }
+
+    for (size_t i = 0; i < num_old_coins; ++i)
+    {
+        generate_boolean_r1cs_constraint<FieldT>(this->pb, old_coin_enforce_commitment[i], FMT(this->annotation_prefix, " old_coin_enforce_commitment_%zu", i));
+        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(
+            pb_packing_sum<FieldT>(pb_variable_array<FieldT>(old_coin_value_variables[i].rbegin(), old_coin_value_variables[i].rend())),
+            1 - old_coin_enforce_commitment[i],
+            0), FMT(this->annotation_prefix, " enforce_%zu", i));
     }
 
     /* check the balance equation */
@@ -372,6 +382,11 @@ void zerocash_pour_gadget<FieldT>::generate_r1cs_witness(const std::vector<merkl
     {
         old_coin_serial_number_nonce_variables[i].fill_with_bits(this->pb, old_coin_serial_number_nonces[i]);
         old_coin_value_variables[i].fill_with_bits(this->pb, old_coin_values[i]);
+
+        for (size_t j = 0; j < coin_value_length; ++j)
+        {
+            this->pb.val(old_coin_enforce_commitment[i]) = (old_coin_values[i][j] ? FieldT::one() : FieldT::zero());
+        }
     }
 
     public_in_value_variable.fill_with_bits(this->pb, public_in_value);
