@@ -1,5 +1,5 @@
 OPTFLAGS = -march=native -mtune=native -O2
-CXXFLAGS += -g -Wall -Wextra -Werror -Wfatal-errors -Wno-unused-parameter -std=c++11 -fPIC -Wno-unused-variable
+CXXFLAGS += -g -Wall -Wextra -Wno-unused-parameter -std=c++11 -fPIC -Wno-unused-variable
 LDFLAGS += -flto
 
 DEPSRC=depsrc
@@ -9,7 +9,22 @@ LIBZEROCASH=libzerocash
 UTILS=$(LIBZEROCASH)/utils
 TESTUTILS=tests
 LDLIBS += -L $(DEPINST)/lib -Wl,-rpath $(DEPINST)/lib -L . -lsnark -lgmpxx -lgmp
-LDLIBS += -lboost_system -lcrypto -lcryptopp -lz -ldl
+
+ifeq ($(USE_MT),1)
+	LDLIBS += -lboost_system-mt
+	LDLIBS += -lboost_unit_test_framework-mt
+else
+	LDLIBS += -lboost_system
+	LDLIBS += -lboost_unit_test_framework
+endif
+
+LDLIBS += -lcrypto -lcryptopp -lz -ldl
+
+ifeq ($(LINK_RT),1)
+LDLIBS += -lrt
+endif
+
+
 CXXFLAGS += -I $(DEPINST)/include -I $(DEPINST)/include/libsnark -I . -DUSE_ASM -DCURVE_ALT_BN128
 
 LIBPATH = /usr/local/lib
@@ -32,6 +47,7 @@ EXECUTABLES= \
 	zerocash_pour_ppzksnark/tests/test_zerocash_pour_ppzksnark \
 	zerocash_pour_ppzksnark/profiling/profile_zerocash_pour_gadget \
 	tests/zerocashTest \
+	tests/utilTest \
 	tests/merkleTest \
 	libzerocash/GenerateParamsForFiles
 
@@ -117,7 +133,7 @@ banktest_library: %: bankTest.o $(OBJS)
 merkletest_library: %: merkleTest.o $(OBJS)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -lzerocash
 
-.PHONY: clean
+.PHONY: clean install
 
 clean:
 	$(RM) \
@@ -127,3 +143,17 @@ clean:
 		${patsubst %.cpp,%.d,${SRCS}} \
 		libzerocash.a \
 		tests/test_library
+
+
+HEADERS_SRC=$(shell find . -name '*.hpp' -o -name '*.tcc' -o -name '*.h')
+HEADERS_DEST=$(patsubst %,$(PREFIX)/include/libzerocash/%,$(HEADERS_SRC))
+
+$(HEADERS_DEST): $(PREFIX)/include/libzerocash/%: %
+	mkdir -p $(shell dirname $@)
+	cp $< $@
+
+install: all $(HEADERS_DEST)
+	mkdir -p $(PREFIX)/lib
+	install -m 0755 libzerocash.a $(PREFIX)/lib/
+	mkdir -p $(PREFIX)/bin
+	install -m 0755 -t $(PREFIX)/bin/ $(EXECUTABLES)

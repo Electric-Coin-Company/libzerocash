@@ -12,136 +12,164 @@
  *****************************************************************************/
 
 #include <fstream>
+#include <boost/format.hpp>
 
 #include "Zerocash.h"
 #include "ZerocashParams.h"
 
+static void throw_missing_param_file_exception(std::string paramtype, std::string path) {
+    /* paramtype should be either "proving" or "verifying". */
+    const char* tmpl = ("Could not open %s key file: %s\n"
+                        "Please refer to user documentation for installing this file.");
+    throw ZerocashException((boost::format(tmpl) % paramtype % path).str());
+}
+
 namespace libzerocash {
 
-ZerocashParams::ZerocashParams(zerocash_pour_proving_key<ZerocashParams::zerocash_pp>* p_pk_1,
-                               zerocash_pour_verification_key<ZerocashParams::zerocash_pp>* p_vk_1) :
-    params_pk_v1(p_pk_1), params_vk_v1(p_vk_1)
+zerocash_pour_keypair<ZerocashParams::zerocash_pp> ZerocashParams::GenerateNewKeyPair(const unsigned int tree_depth)
 {
-	kp_v1 = NULL;
-    params_pk_v1 = NULL;
-    params_vk_v1 = NULL;
+    libzerocash::ZerocashParams::zerocash_pp::init_public_params();
+    libzerocash::zerocash_pour_keypair<libzerocash::ZerocashParams::zerocash_pp> kp_v1 =
+        libzerocash::zerocash_pour_ppzksnark_generator<libzerocash::ZerocashParams::zerocash_pp>(
+            libzerocash::ZerocashParams::numPourInputs,
+            libzerocash::ZerocashParams::numPourOutputs,
+            tree_depth
+        );
+    return kp_v1;
 }
 
-ZerocashParams::ZerocashParams(const unsigned int tree_depth) :
-    treeDepth(tree_depth)
+void ZerocashParams::SaveProvingKeyToFile(const zerocash_pour_proving_key<ZerocashParams::zerocash_pp>* p_pk_1, std::string path)
 {
-	kp_v1 = NULL;
-    params_pk_v1 = NULL;
-    params_vk_v1 = NULL;
+    std::stringstream ssProving;
+    ssProving << p_pk_1->r1cs_pk;
+    std::ofstream pkFilePtr;
+    pkFilePtr.open(path, std::ios::binary);
+    ssProving.rdbuf()->pubseekpos(0, std::ios_base::out);
+    pkFilePtr << ssProving.rdbuf();
+    pkFilePtr.flush();
+    pkFilePtr.close();
 }
 
-ZerocashParams::ZerocashParams(const unsigned int tree_depth,
-                               std::string pathToProvingParams="",
-                               std::string pathToVerificationParams="") :
-    treeDepth(tree_depth)
+
+void ZerocashParams::SaveVerificationKeyToFile(const zerocash_pour_verification_key<ZerocashParams::zerocash_pp>* p_vk_1, std::string path)
 {
-	kp_v1 = NULL;
+    std::stringstream ssVerification;
+    ssVerification << p_vk_1->r1cs_vk;
+    std::ofstream vkFilePtr;
+    vkFilePtr.open(path, std::ios::binary);
+    ssVerification.rdbuf()->pubseekpos(0, std::ios_base::out);
+    vkFilePtr << ssVerification.rdbuf();
+    vkFilePtr.flush();
+    vkFilePtr.close();
+}
 
-    ZerocashParams::zerocash_pp::init_public_params();
+zerocash_pour_proving_key<ZerocashParams::zerocash_pp> ZerocashParams::LoadProvingKeyFromFile(std::string path, const unsigned int tree_depth)
+{
+    std::stringstream ssProving;
+    std::ifstream fileProving(path, std::ios::binary);
 
-    if(pathToProvingParams != "") {
-        std::stringstream ssProving;
-        std::ifstream fileProving(pathToProvingParams, std::ios::binary);
-
-        if(!fileProving.is_open()) {
-            throw ZerocashException("Could not open proving key file.");
-        }
-
-        ssProving << fileProving.rdbuf();
-        fileProving.close();
-
-        ssProving.rdbuf()->pubseekpos(0, std::ios_base::in);
-
-        r1cs_ppzksnark_proving_key<ZerocashParams::zerocash_pp> pk_temp;
-        ssProving >> pk_temp;
-
-        params_pk_v1 = new zerocash_pour_proving_key<ZerocashParams::zerocash_pp>(this->numPourInputs,
-                                                                                  this->numPourOutputs,
-                                                                                  this->treeDepth,
-                                                                                  std::move(pk_temp));
+    if(!fileProving.is_open()) {
+        throw_missing_param_file_exception("proving", path);
     }
-    else {
+
+    ssProving << fileProving.rdbuf();
+    fileProving.close();
+
+    ssProving.rdbuf()->pubseekpos(0, std::ios_base::in);
+
+    r1cs_ppzksnark_proving_key<ZerocashParams::zerocash_pp> pk_temp;
+    ssProving >> pk_temp;
+
+    return zerocash_pour_proving_key<ZerocashParams::zerocash_pp>(
+        libzerocash::ZerocashParams::numPourInputs,
+        libzerocash::ZerocashParams::numPourOutputs,
+        tree_depth,
+        std::move(pk_temp)
+    );
+}
+
+zerocash_pour_verification_key<ZerocashParams::zerocash_pp> ZerocashParams::LoadVerificationKeyFromFile(std::string path, const unsigned int tree_depth)
+{
+    std::stringstream ssVerification;
+    std::ifstream fileVerification(path, std::ios::binary);
+
+    if(!fileVerification.is_open()) {
+        throw_missing_param_file_exception("verification", path);
+    }
+
+    ssVerification << fileVerification.rdbuf();
+    fileVerification.close();
+
+    ssVerification.rdbuf()->pubseekpos(0, std::ios_base::in);
+
+    r1cs_ppzksnark_verification_key<ZerocashParams::zerocash_pp> vk_temp;
+    ssVerification >> vk_temp;
+
+    return zerocash_pour_verification_key<ZerocashParams::zerocash_pp>(
+        libzerocash::ZerocashParams::numPourInputs,
+        libzerocash::ZerocashParams::numPourOutputs,
+        std::move(vk_temp)
+    );
+}
+
+ZerocashParams::ZerocashParams(
+    const unsigned int tree_depth,
+    zerocash_pour_keypair<ZerocashParams::zerocash_pp> *keypair
+) :
+    treeDepth(tree_depth)
+{
+    params_pk_v1 = new zerocash_pour_proving_key<ZerocashParams::zerocash_pp>(keypair->pk);
+    params_vk_v1 = new zerocash_pour_verification_key<ZerocashParams::zerocash_pp>(keypair->vk);
+}
+
+ZerocashParams::ZerocashParams(
+    const unsigned int tree_depth,
+    zerocash_pour_proving_key<ZerocashParams::zerocash_pp>* p_pk_1,
+    zerocash_pour_verification_key<ZerocashParams::zerocash_pp>* p_vk_1
+) :
+    treeDepth(tree_depth)
+{
+    assert(p_pk_1 != NULL || p_vk_1 != NULL);
+
+    if (p_pk_1 == NULL) {
         params_pk_v1 = NULL;
+    } else {
+        params_pk_v1 = new zerocash_pour_proving_key<ZerocashParams::zerocash_pp>(*p_pk_1);
     }
 
-    if(pathToVerificationParams != "") {
-        std::stringstream ssVerification;
-        std::ifstream fileVerification(pathToVerificationParams, std::ios::binary);
-
-        if(!fileVerification.is_open()) {
-            throw ZerocashException("Could not open verification key file.");
-        }
-
-        ssVerification << fileVerification.rdbuf();
-        fileVerification.close();
-
-        ssVerification.rdbuf()->pubseekpos(0, std::ios_base::in);
-
-        r1cs_ppzksnark_verification_key<ZerocashParams::zerocash_pp> vk_temp2;
-        ssVerification >> vk_temp2;
-
-        params_vk_v1 = new zerocash_pour_verification_key<ZerocashParams::zerocash_pp>(this->numPourInputs,
-                                                                                       this->numPourOutputs,
-                                                                                       std::move(vk_temp2));
-    }
-    else {
+    if (p_vk_1 == NULL) {
         params_vk_v1 = NULL;
+    } else {
+        params_vk_v1 = new zerocash_pour_verification_key<ZerocashParams::zerocash_pp>(*p_vk_1);
     }
-}
-
-void ZerocashParams::initV1Params()
-{
-    ZerocashParams::zerocash_pp::init_public_params();
-    kp_v1 = new zerocash_pour_keypair<ZerocashParams::zerocash_pp>(zerocash_pour_ppzksnark_generator<ZerocashParams::zerocash_pp>(this->numPourInputs,
-                                                                                                                                  this->numPourOutputs,
-                                                                                                                                  this->treeDepth));
-
-	params_pk_v1 = &kp_v1->pk;
-	params_vk_v1 = &kp_v1->vk;
 }
 
 ZerocashParams::~ZerocashParams()
 {
-	delete kp_v1;
+    if (params_pk_v1 != NULL) {
+        delete params_pk_v1;
+    }
+    if (params_vk_v1 != NULL) {
+        delete params_vk_v1;
+    }
 }
 
-const zerocash_pour_proving_key<ZerocashParams::zerocash_pp>& ZerocashParams::getProvingKey(const int version)
+const zerocash_pour_proving_key<ZerocashParams::zerocash_pp>& ZerocashParams::getProvingKey()
 {
-    switch(version) {
-        case 1:
-            if(params_pk_v1 == NULL) {
-                this->initV1Params();
-                return *(this->params_pk_v1);
-            }
-            else {
-                return *(this->params_pk_v1);
-            }
-            break;
+    if (params_pk_v1 != NULL) {
+        return *params_pk_v1;
+    } else {
+        throw ZerocashException("Pour proving key not set.");
     }
-
-    throw ZerocashException("Invalid version number");
 }
 
-const zerocash_pour_verification_key<ZerocashParams::zerocash_pp>& ZerocashParams::getVerificationKey(const int version)
+const zerocash_pour_verification_key<ZerocashParams::zerocash_pp>& ZerocashParams::getVerificationKey()
 {
-    switch(version) {
-        case 1:
-            if(params_vk_v1 == NULL) {
-                this->initV1Params();
-                return *(this->params_vk_v1);
-            }
-            else {
-                return *(this->params_vk_v1);
-            }
-            break;
+    if (params_vk_v1 != NULL) {
+        return *params_vk_v1;
+    } else {
+        throw ZerocashException("Pour verification key not set.");
     }
-
-    throw ZerocashException("Invalid version number");
 }
 
 } /* namespace libzerocash */

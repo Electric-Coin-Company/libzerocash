@@ -41,6 +41,8 @@ public:
 		 const std::vector<unsigned char>& rho,
          const std::vector<unsigned char>& r);
 
+   	Coin(const std::string bucket, Address& addr);
+
 	const PublicAddress& getPublicAddress() const;
 
 	const CoinCommitment& getCoinCommitment() const;
@@ -48,15 +50,19 @@ public:
 	bool operator==(const Coin& rhs) const;
 	bool operator!=(const Coin& rhs) const;
 
-	IMPLEMENT_SERIALIZE
-	(
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 	    READWRITE(addr_pk);
 	    READWRITE(cm);
         READWRITE(rho);
         READWRITE(r);
 		READWRITE(k);
 		READWRITE(coinValue);
-	)
+	}
+
+	uint64_t getValue() const;
 
 private:
 	PublicAddress addr_pk;
@@ -72,8 +78,6 @@ private:
 
     const std::vector<unsigned char>& getR() const;
     void computeCommitments(std::vector<unsigned char>& a_pk);
-
-	uint64_t getValue() const;
 };
 
 } /* namespace libzerocash */
