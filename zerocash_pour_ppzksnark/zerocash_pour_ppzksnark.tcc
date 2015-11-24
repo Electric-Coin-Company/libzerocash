@@ -140,7 +140,8 @@ zerocash_pour_proof<ppzksnark_ppT> zerocash_pour_ppzksnark_prover(const zerocash
                                                                   const std::vector<bit_vector> &new_coin_serial_number_nonces,
                                                                   const std::vector<bit_vector> &old_coin_serial_number_nonces,
                                                                   const std::vector<bit_vector> &new_coin_values,
-                                                                  const bit_vector &public_value,
+                                                                  const bit_vector &public_in_value,
+                                                                  const bit_vector &public_out_value,
                                                                   const std::vector<bit_vector> &old_coin_values,
                                                                   const bit_vector &signature_public_key_hash)
 {
@@ -161,7 +162,8 @@ zerocash_pour_proof<ppzksnark_ppT> zerocash_pour_ppzksnark_prover(const zerocash
                             new_coin_serial_number_nonces,
                             old_coin_serial_number_nonces,
                             new_coin_values,
-                            public_value,
+                            public_in_value,
+                            public_out_value,
                             old_coin_values,
                             signature_public_key_hash);
     assert(pb.is_satisfied());
@@ -177,7 +179,8 @@ bool zerocash_pour_ppzksnark_verifier(const zerocash_pour_verification_key<ppzks
                                       const bit_vector &merkle_tree_root,
                                       const std::vector<bit_vector> &old_coin_serial_numbers,
                                       const std::vector<bit_vector> &new_coin_commitments,
-                                      const bit_vector &public_value,
+                                      const bit_vector &public_in_value,
+                                      const bit_vector &public_out_value,
                                       const bit_vector &signature_public_key_hash,
                                       const std::vector<bit_vector> &signature_public_key_hash_macs,
                                       const zerocash_pour_proof<ppzksnark_ppT> &proof)
@@ -190,7 +193,8 @@ bool zerocash_pour_ppzksnark_verifier(const zerocash_pour_verification_key<ppzks
                                                                              merkle_tree_root,
                                                                              old_coin_serial_numbers,
                                                                              new_coin_commitments,
-                                                                             public_value,
+                                                                             public_in_value,
+                                                                             public_out_value,
                                                                              signature_public_key_hash,
                                                                              signature_public_key_hash_macs);
     const bool ans = r1cs_ppzksnark_verifier_strong_IC<ppzksnark_ppT>(vk.r1cs_vk, input, proof);

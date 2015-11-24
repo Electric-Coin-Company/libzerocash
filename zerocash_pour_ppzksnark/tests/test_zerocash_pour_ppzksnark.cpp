@@ -146,7 +146,8 @@ void test_zerocash_pour_ppzksnark(const size_t num_old_coins, const size_t num_n
     std::vector<bit_vector> new_coin_serial_number_nonces(num_new_coins); //
     std::vector<bit_vector> old_coin_serial_number_nonces(num_old_coins); //
     std::vector<bit_vector> new_coin_values(num_new_coins); //
-    bit_vector public_value; //
+    bit_vector public_in_value; //
+    bit_vector public_out_value; //
     std::vector<bit_vector> old_coin_values(num_old_coins); //
     bit_vector signature_public_key_hash; //
 
@@ -159,7 +160,8 @@ void test_zerocash_pour_ppzksnark(const size_t num_old_coins, const size_t num_n
     std::transform(old_coin_values_as_integers.begin(), old_coin_values_as_integers.end(),
                    old_coin_values.begin(),
                    [] (const size_t value) { return int_to_bit_vector(value, coin_value_length); });
-    public_value = int_to_bit_vector(all_new_values_as_integers[0], coin_value_length);
+    public_in_value = int_to_bit_vector(0, coin_value_length);
+    public_out_value = int_to_bit_vector(all_new_values_as_integers[0], coin_value_length);
     std::transform(all_new_values_as_integers.begin() + 1, all_new_values_as_integers.end(),
                    new_coin_values.begin(),
                    [] (const size_t value) { return int_to_bit_vector(value, coin_value_length); });
@@ -268,7 +270,8 @@ void test_zerocash_pour_ppzksnark(const size_t num_old_coins, const size_t num_n
                                new_coin_serial_number_nonces,
                                old_coin_serial_number_nonces,
                                new_coin_values,
-                               public_value,
+                               public_in_value,
+                               public_out_value,
                                old_coin_values,
                                signature_public_key_hash);
     assert(pb.is_satisfied());
@@ -291,7 +294,8 @@ void test_zerocash_pour_ppzksnark(const size_t num_old_coins, const size_t num_n
                                                                          new_coin_serial_number_nonces,
                                                                          old_coin_serial_number_nonces,
                                                                          new_coin_values,
-                                                                         public_value,
+                                                                         public_in_value,
+                                                                         public_out_value,
                                                                          old_coin_values,
                                                                          signature_public_key_hash);
     proof = reserialize<zerocash_pour_proof<ppT> >(proof);
@@ -300,7 +304,8 @@ void test_zerocash_pour_ppzksnark(const size_t num_old_coins, const size_t num_n
                                                                            merkle_tree_root,
                                                                            old_coin_serial_numbers,
                                                                            new_coin_commitments,
-                                                                           public_value,
+                                                                           public_in_value,
+                                                                           public_out_value,
                                                                            signature_public_key_hash,
                                                                            signature_public_key_hash_macs,
                                                                            proof);

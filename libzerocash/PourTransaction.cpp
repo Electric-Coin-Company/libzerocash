@@ -64,6 +64,9 @@ PourTransaction::PourTransaction(uint16_t version_num,
 {
     this->version = version_num;
 
+    std::vector<unsigned char>  publicInValue(v_size);
+    uint64_t inval = 0;
+    convertIntToBytesVector(inval, publicInValue);
     convertIntToBytesVector(v_pub, this->publicValue);
 
     this->cm_1 = c_1_new.getCoinCommitment();
@@ -84,7 +87,8 @@ PourTransaction::PourTransaction(uint16_t version_num,
     std::vector<bool> nonce_old_2_bv(rho_size * 8);
     std::vector<bool> val_new_1_bv(v_size * 8);
     std::vector<bool> val_new_2_bv(v_size * 8);
-    std::vector<bool> val_pub_bv(v_size * 8);
+    std::vector<bool> val_in_pub_bv(v_size * 8);
+    std::vector<bool> val_out_pub_bv(v_size * 8);
     std::vector<bool> val_old_1_bv(v_size * 8);
     std::vector<bool> val_old_2_bv(v_size * 8);
     std::vector<bool> cm_new_1_bv(cm_size * 8);
@@ -129,7 +133,8 @@ PourTransaction::PourTransaction(uint16_t version_num,
     convertIntToBytesVector(c_2_new.getValue(), v_new_2_conv);
     libzerocash::convertBytesVectorToVector(v_new_2_conv, val_new_2_bv);
 
-    convertBytesVectorToVector(this->publicValue, val_pub_bv);
+    convertBytesVectorToVector(publicInValue, val_in_pub_bv);
+    convertBytesVectorToVector(this->publicValue, val_out_pub_bv);
 
     std::vector<bool> nonce_old_1(rho_size * 8);
     copy(nonce_old_1_bv.begin(), nonce_old_1_bv.end(), nonce_old_1.begin());
@@ -207,7 +212,8 @@ PourTransaction::PourTransaction(uint16_t version_num,
             { nonce_new_1_bv, nonce_new_2_bv },
             { nonce_old_1_bv, nonce_old_2_bv },
             { val_new_1_bv, val_new_2_bv },
-            val_pub_bv,
+            val_in_pub_bv,
+            val_out_pub_bv,
             { val_old_1_bv, val_old_2_bv },
             h_S_bv);
 
@@ -287,6 +293,10 @@ bool PourTransaction::verify(ZerocashParams& params,
 		return true;
 	}
 
+    std::vector<unsigned char>  publicInValue(v_size);
+    uint64_t inval = 0;
+    convertIntToBytesVector(inval, publicInValue);
+
     zerocash_pour_proof<ZerocashParams::zerocash_pp> proof_SNARK;
     std::stringstream ss;
     ss.str(this->zkSNARK);
@@ -305,7 +315,8 @@ bool PourTransaction::verify(ZerocashParams& params,
     std::vector<bool> sn_old_2_bv(sn_size * 8);
     std::vector<bool> cm_new_1_bv(cm_size * 8);
     std::vector<bool> cm_new_2_bv(cm_size * 8);
-    std::vector<bool> val_pub_bv(v_size * 8);
+    std::vector<bool> val_in_pub_bv(v_size * 8);
+    std::vector<bool> val_out_pub_bv(v_size * 8);
     std::vector<bool> MAC_1_bv(h_size * 8);
     std::vector<bool> MAC_2_bv(h_size * 8);
 
@@ -314,7 +325,8 @@ bool PourTransaction::verify(ZerocashParams& params,
     convertBytesVectorToVector(this->serialNumber_2, sn_old_2_bv);
     convertBytesVectorToVector(this->cm_1.getCommitmentValue(), cm_new_1_bv);
     convertBytesVectorToVector(this->cm_2.getCommitmentValue(), cm_new_2_bv);
-    convertBytesVectorToVector(this->publicValue, val_pub_bv);
+    convertBytesVectorToVector(publicInValue, val_in_pub_bv);
+    convertBytesVectorToVector(this->publicValue, val_out_pub_bv);
     convertBytesVectorToVector(this->MAC_1, MAC_1_bv);
     convertBytesVectorToVector(this->MAC_2, MAC_2_bv);
 
@@ -339,7 +351,8 @@ bool PourTransaction::verify(ZerocashParams& params,
                                                                                       root_bv,
                                                                                       { sn_old_1_bv, sn_old_2_bv },
                                                                                       { cm_new_1_bv, cm_new_2_bv },
-                                                                                      val_pub_bv,
+                                                                                      val_in_pub_bv,
+                                                                                      val_out_pub_bv,
                                                                                       h_S_bv,
                                                                                       { MAC_1_bv, MAC_2_bv },
                                                                                       proof_SNARK);
