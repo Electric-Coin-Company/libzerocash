@@ -82,6 +82,7 @@ int main()
 
   if (incTree.insertVector(values) == false) {
 	 cout << "Could not insert" << endl;
+     exit(EXIT_FAILURE);
   }
   incTree.prune();
 
@@ -97,5 +98,9 @@ int main()
   writeOut(rootHash);
   cout << endl;
 
-  testCompactRep(incTree);
+  if (testCompactRep(incTree)) {
+      exit(EXIT_SUCCESS);
+  } else {
+      exit(EXIT_FAILURE);
+  }
 }
