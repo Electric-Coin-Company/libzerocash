@@ -204,6 +204,7 @@ BOOST_AUTO_TEST_CASE( SaveAndLoadKeysFromFiles ) {
     		witness_1, witness_2,
     		pubAddress3, pubAddress4,
     		0,
+            0,
     		as,
     		c_1_new, c_2_new);
     cout << "Successfully created a pour transaction.\n" << endl;
@@ -393,7 +394,7 @@ BOOST_AUTO_TEST_CASE( PourTxTest ) {
     cout << "Creating a pour transaction...\n" << endl;
 
     libzerocash::timer_start("Pour Transaction");
-    libzerocash::PourTransaction pourtx(1, p, rt, coins.at(1), coins.at(3), addrs.at(1), addrs.at(3), 1, 3, witness_1, witness_2, pubAddress3, pubAddress4, 0, as, c_1_new, c_2_new);
+    libzerocash::PourTransaction pourtx(1, p, rt, coins.at(1), coins.at(3), addrs.at(1), addrs.at(3), 1, 3, witness_1, witness_2, pubAddress3, pubAddress4, 0, 0, as, c_1_new, c_2_new);
     libzerocash::timer_stop("Pour Transaction");
     print_mem("after pour transaction");
 
@@ -639,6 +640,7 @@ BOOST_AUTO_TEST_CASE( SimpleTxTest ) {
                 witness_1, witness_2,
     		pubAddress3, pubAddress4,
     		0,
+            0,
     		as,
     		c_1_new, c_2_new);
     cout << "Successfully created a pour transaction.\n" << endl;

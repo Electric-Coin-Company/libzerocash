@@ -60,7 +60,8 @@ public:
                     const merkle_authentication_path& path_2,
                     const PublicAddress& addr_1_new,
                     const PublicAddress& addr_2_new,
-                    uint64_t v_pub,
+                    uint64_t v_pub_in,
+                    uint64_t v_pub_out,
                     const std::vector<unsigned char>& pubkeyHash,
                     const Coin& c_1_new,
                     const Coin& c_2_new);
@@ -97,6 +98,13 @@ public:
     const CoinCommitmentValue& getNewCoinCommitmentValue2() const;
 
     /**
+     * Returns the amount of money this transaction wishes to convert from basecoin.
+     *
+     * @return the value
+     */
+    uint64_t getMonetaryValueIn() const;
+
+    /**
      * Returns the amount of money this transaction wishes to convert back into basecoin.
      *
      * @return the value
@@ -108,7 +116,8 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(version);
-        READWRITE(publicValue);
+        READWRITE(publicInValue);
+        READWRITE(publicOutValue);
         READWRITE(serialNumber_1);
         READWRITE(serialNumber_2);
         READWRITE(cm_1);
@@ -123,7 +132,8 @@ public:
 
 private:
 
-    std::vector<unsigned char>  publicValue;        // public output value of the Pour transaction
+    std::vector<unsigned char>  publicInValue;      // public input value of the Pour transaction
+    std::vector<unsigned char>  publicOutValue;     // public output value of the Pour transaction
     std::vector<unsigned char>  serialNumber_1;     // serial number of input (old) coin #1
     std::vector<unsigned char>  serialNumber_2;     // serial number of input (old) coin #1
     CoinCommitment              cm_1;               // coin commitment for output coin #1

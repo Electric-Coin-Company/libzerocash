@@ -56,18 +56,17 @@ PourTransaction::PourTransaction(uint16_t version_num,
                                  const merkle_authentication_path& patMAC_2,
                                  const PublicAddress& addr_1_new,
                                  const PublicAddress& addr_2_new,
-                                 uint64_t v_pub,
+                                 uint64_t v_pub_in,
+                                 uint64_t v_pub_out,
                                  const std::vector<unsigned char>& pubkeyHash,
                                  const Coin& c_1_new,
                                  const Coin& c_2_new) :
-    publicValue(v_size), serialNumber_1(sn_size), serialNumber_2(sn_size), MAC_1(h_size), MAC_2(h_size)
+    publicInValue(v_size), publicOutValue(v_size), serialNumber_1(sn_size), serialNumber_2(sn_size), MAC_1(h_size), MAC_2(h_size)
 {
     this->version = version_num;
 
-    std::vector<unsigned char>  publicInValue(v_size);
-    uint64_t inval = 0;
-    convertIntToBytesVector(inval, publicInValue);
-    convertIntToBytesVector(v_pub, this->publicValue);
+    convertIntToBytesVector(v_pub_in, this->publicInValue);
+    convertIntToBytesVector(v_pub_out, this->publicOutValue);
 
     this->cm_1 = c_1_new.getCoinCommitment();
     this->cm_2 = c_2_new.getCoinCommitment();
@@ -133,8 +132,8 @@ PourTransaction::PourTransaction(uint16_t version_num,
     convertIntToBytesVector(c_2_new.getValue(), v_new_2_conv);
     libzerocash::convertBytesVectorToVector(v_new_2_conv, val_new_2_bv);
 
-    convertBytesVectorToVector(publicInValue, val_in_pub_bv);
-    convertBytesVectorToVector(this->publicValue, val_out_pub_bv);
+    convertBytesVectorToVector(this->publicInValue, val_in_pub_bv);
+    convertBytesVectorToVector(this->publicOutValue, val_out_pub_bv);
 
     std::vector<bool> nonce_old_1(rho_size * 8);
     copy(nonce_old_1_bv.begin(), nonce_old_1_bv.end(), nonce_old_1.begin());
@@ -293,10 +292,6 @@ bool PourTransaction::verify(ZerocashParams& params,
 		return true;
 	}
 
-    std::vector<unsigned char>  publicInValue(v_size);
-    uint64_t inval = 0;
-    convertIntToBytesVector(inval, publicInValue);
-
     zerocash_pour_proof<ZerocashParams::zerocash_pp> proof_SNARK;
     std::stringstream ss;
     ss.str(this->zkSNARK);
@@ -306,7 +301,8 @@ bool PourTransaction::verify(ZerocashParams& params,
 	if (pubkeyHash.size() != h_size)	{ return false; }
 	if (this->serialNumber_1.size() != sn_size)	{ return false; }
 	if (this->serialNumber_2.size() != sn_size)	{ return false; }
-	if (this->publicValue.size() != v_size) { return false; }
+	if (this->publicInValue.size() != v_size) { return false; }
+    if (this->publicOutValue.size() != v_size) { return false; }
 	if (this->MAC_1.size() != h_size)	{ return false; }
 	if (this->MAC_2.size() != h_size)	{ return false; }
 
@@ -325,8 +321,8 @@ bool PourTransaction::verify(ZerocashParams& params,
     convertBytesVectorToVector(this->serialNumber_2, sn_old_2_bv);
     convertBytesVectorToVector(this->cm_1.getCommitmentValue(), cm_new_1_bv);
     convertBytesVectorToVector(this->cm_2.getCommitmentValue(), cm_new_2_bv);
-    convertBytesVectorToVector(publicInValue, val_in_pub_bv);
-    convertBytesVectorToVector(this->publicValue, val_out_pub_bv);
+    convertBytesVectorToVector(this->publicInValue, val_in_pub_bv);
+    convertBytesVectorToVector(this->publicOutValue, val_out_pub_bv);
     convertBytesVectorToVector(this->MAC_1, MAC_1_bv);
     convertBytesVectorToVector(this->MAC_2, MAC_2_bv);
 
@@ -393,8 +389,15 @@ const CoinCommitmentValue& PourTransaction::getNewCoinCommitmentValue2() const{
 /**
  * Returns the amount of money this transaction converts back into basecoin.
  */
+uint64_t PourTransaction::getMonetaryValueIn() const{
+    return convertBytesVectorToInt(this->publicInValue);
+}
+
+/**
+ * Returns the amount of money this transaction converts back into basecoin.
+ */
 uint64_t PourTransaction::getMonetaryValueOut() const{
-	return convertBytesVectorToInt(this->publicValue);
+	return convertBytesVectorToInt(this->publicOutValue);
 }
 
 } /* namespace libzerocash */
