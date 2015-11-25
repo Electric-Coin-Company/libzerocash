@@ -380,12 +380,18 @@ void zerocash_pour_gadget<FieldT>::generate_r1cs_witness(const std::vector<merkl
 
     for (size_t i = 0; i < num_old_coins; ++i)
     {
+        this->pb.val(old_coin_enforce_commitment[i]) = FieldT::zero();
         old_coin_serial_number_nonce_variables[i].fill_with_bits(this->pb, old_coin_serial_number_nonces[i]);
         old_coin_value_variables[i].fill_with_bits(this->pb, old_coin_values[i]);
 
         for (size_t j = 0; j < coin_value_length; ++j)
         {
-            this->pb.val(old_coin_enforce_commitment[i]) = (old_coin_values[i][j] ? FieldT::one() : FieldT::zero());
+            if (old_coin_values[i][j]) {
+                // If any bit in the value is nonzero, the value is nonzero.
+                // Thus, the old coin must be committed in the tree.
+                this->pb.val(old_coin_enforce_commitment[i]) = FieldT::one();
+                break;
+            }
         }
     }
 
