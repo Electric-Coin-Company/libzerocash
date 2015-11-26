@@ -16,6 +16,8 @@
 #include "Coin.h"
 #include "ZerocashParams.h"
 #include "Zerocash.h"
+#include "PourInput.h"
+#include "PourOutput.h"
 
 typedef std::vector<unsigned char> CoinCommitmentValue;
 
@@ -26,6 +28,14 @@ namespace libzerocash {
 class PourTransaction {
 public:
     PourTransaction();
+    PourTransaction(ZerocashParams& params,
+                                 const std::vector<unsigned char>& pubkeyHash,
+                                 const MerkleRootType& rt,
+                                 const std::vector<PourInput> inputs,
+                                 const std::vector<PourOutput> outputs,
+                                 uint64_t vpub_in,
+                                 uint64_t vpub_out
+                                );
     /**
      * Generates a transaction pouring the funds  in  two existing coins into two new coins and optionally
      * converting some of those funds back into the base currency.
@@ -65,6 +75,25 @@ public:
                     const std::vector<unsigned char>& pubkeyHash,
                     const Coin& c_1_new,
                     const Coin& c_2_new);
+
+    void init(uint16_t version_num,
+                ZerocashParams& params,
+                const MerkleRootType& roott,
+                const Coin& c_1_old,
+                const Coin& c_2_old,
+                const Address& addr_1_old,
+                const Address& addr_2_old,
+                const size_t patMerkleIdx_1,
+                const size_t patMerkleIdx_2,
+                const merkle_authentication_path& path_1,
+                const merkle_authentication_path& path_2,
+                const PublicAddress& addr_1_new,
+                const PublicAddress& addr_2_new,
+                uint64_t v_pub_in,
+                uint64_t v_pub_out,
+                const std::vector<unsigned char>& pubkeyHash,
+                const Coin& c_1_new,
+                const Coin& c_2_new);
 
     /**
      * Verifies the pour transaction.

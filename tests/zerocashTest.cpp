@@ -26,6 +26,8 @@
 #include "libzerocash/MerkleTree.h"
 #include "libzerocash/MintTransaction.h"
 #include "libzerocash/PourTransaction.h"
+#include "libzerocash/PourInput.h"
+#include "libzerocash/PourOutput.h"
 #include "libzerocash/utils/util.h"
 
 using namespace std;
@@ -224,6 +226,120 @@ BOOST_AUTO_TEST_CASE( SaveAndLoadKeysFromFiles ) {
     bool pourtx_res = pourtxNew.verify(p, pubkeyHash, rt);
 
     BOOST_CHECK(minttx_res && pourtx_res);
+}
+
+BOOST_AUTO_TEST_CASE( PourInputOutputTest ) {
+    // dummy input
+    {
+        libzerocash::PourInput input(TEST_TREE_DEPTH);
+
+        BOOST_CHECK(input.old_coin.getValue() == 0);
+        BOOST_CHECK(input.old_address.getPublicAddress() == input.old_coin.getPublicAddress());
+    }
+
+    // dummy output
+    {
+        libzerocash::PourOutput output;
+
+        BOOST_CHECK(output.new_coin.getValue() == 0);
+        BOOST_CHECK(output.to_address == output.new_coin.getPublicAddress());
+    }
+}
+
+// testing with general situational setup
+bool test_pour(libzerocash::ZerocashParams& p,
+          uint64_t vpub_in,
+          uint64_t vpub_out,
+          std::vector<uint64_t> inputs, // values of the inputs (max 2)
+          std::vector<uint64_t> outputs) // values of the outputs (max 2)
+{
+    using pour_input_state = std::tuple<libzerocash::Address, libzerocash::Coin, std::vector<bool>>;
+
+    // Construct incremental merkle tree
+    libzerocash::IncrementalMerkleTree merkleTree(TEST_TREE_DEPTH);
+
+    // Dummy sig_pk
+    vector<unsigned char> as(sig_pk_size, 'a');
+
+    vector<libzerocash::PourInput> pour_inputs;
+    vector<libzerocash::PourOutput> pour_outputs;
+
+    vector<pour_input_state> input_state;
+
+    for(std::vector<uint64_t>::iterator it = inputs.begin(); it != inputs.end(); ++it) {
+        libzerocash::Address addr;
+        libzerocash::Coin coin(addr.getPublicAddress(), *it);
+
+        // commitment from coin
+        std::vector<bool> commitment(cm_size * 8);
+        libzerocash::convertBytesVectorToVector(coin.getCoinCommitment().getCommitmentValue(), commitment);
+
+        // insert commitment into the merkle tree
+        std::vector<bool> index;
+        merkleTree.insertElement(commitment, index);
+
+        // store the state temporarily
+        input_state.push_back(std::make_tuple(addr, coin, index));
+    }
+
+    // compute the merkle root we will be working with
+    vector<unsigned char> rt(root_size);
+    {
+        vector<bool> root_bv(root_size * 8);
+        merkleTree.getRootValue(root_bv);
+        libzerocash::convertVectorToBytesVector(root_bv, rt);
+    }
+
+    // get witnesses for all the input coins and construct the pours
+    for(vector<pour_input_state>::iterator it = input_state.begin(); it != input_state.end(); ++it) {
+        merkle_authentication_path path(TEST_TREE_DEPTH);
+
+        auto index = std::get<2>(*it);
+        merkleTree.getWitness(index, path);
+
+        pour_inputs.push_back(libzerocash::PourInput(std::get<1>(*it), std::get<0>(*it), libzerocash::convertVectorToInt(index), path));
+    }
+
+    // construct dummy outputs with the given values
+    for(vector<uint64_t>::iterator it = outputs.begin(); it != outputs.end(); ++it) {
+        pour_outputs.push_back(libzerocash::PourOutput(*it));
+    }
+
+    libzerocash::PourTransaction pourtx(p, as, rt, pour_inputs, pour_outputs, vpub_in, vpub_out);
+
+    return pourtx.verify(p, as, rt);
+}
+
+BOOST_AUTO_TEST_CASE( PourVpubInTest ) {
+    auto keypair = libzerocash::ZerocashParams::GenerateNewKeyPair(TEST_TREE_DEPTH);
+    libzerocash::ZerocashParams p(
+        TEST_TREE_DEPTH,
+        &keypair
+    );
+
+    // Things that should work..
+    BOOST_CHECK(test_pour(p, 0, 0, {1}, {1}));
+    BOOST_CHECK(test_pour(p, 0, 0, {2}, {1, 1}));
+    BOOST_CHECK(test_pour(p, 0, 0, {2, 2}, {3, 1}));
+    BOOST_CHECK(test_pour(p, 0, 1, {1}, {}));
+    BOOST_CHECK(test_pour(p, 0, 1, {2}, {1}));
+    BOOST_CHECK(test_pour(p, 0, 1, {2, 2}, {2, 1}));
+    BOOST_CHECK(test_pour(p, 1, 0, {}, {1}));
+    BOOST_CHECK(test_pour(p, 1, 0, {1}, {1, 1}));
+    BOOST_CHECK(test_pour(p, 1, 0, {2, 2}, {2, 3}));
+
+    // Things that should not work...
+    BOOST_CHECK(!test_pour(p, 0, 1, {1}, {1}));
+    BOOST_CHECK(!test_pour(p, 0, 1, {2}, {1, 1}));
+    BOOST_CHECK(!test_pour(p, 0, 1, {2, 2}, {3, 1}));
+    BOOST_CHECK(!test_pour(p, 0, 2, {1}, {}));
+    BOOST_CHECK(!test_pour(p, 0, 2, {2}, {1}));
+    BOOST_CHECK(!test_pour(p, 0, 2, {2, 2}, {2, 1}));
+    BOOST_CHECK(!test_pour(p, 1, 1, {}, {1}));
+    BOOST_CHECK(!test_pour(p, 1, 1, {1}, {1, 1}));
+    BOOST_CHECK(!test_pour(p, 1, 1, {2, 2}, {2, 3}));
+
+    BOOST_CHECK(!test_pour(p, 0, 0, {2, 2}, {2, 3}));
 }
 
 BOOST_AUTO_TEST_CASE( CoinTest ) {

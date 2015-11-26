@@ -32,6 +32,8 @@ using CryptoPP::PK_EncryptorFilter;
 
 #include "Zerocash.h"
 #include "PourTransaction.h"
+#include "PourInput.h"
+#include "PourOutput.h"
 
 #include "libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp"
 #include "zerocash_pour_ppzksnark/zerocash_pour_gadget.hpp"
@@ -41,6 +43,56 @@ namespace libzerocash {
 
 PourTransaction::PourTransaction(): cm_1(), cm_2() {
 
+}
+
+PourTransaction::PourTransaction(ZerocashParams& params,
+                                 const std::vector<unsigned char>& pubkeyHash,
+                                 const MerkleRootType& rt,
+                                 std::vector<PourInput> inputs,
+                                 std::vector<PourOutput> outputs,
+                                 uint64_t vpub_in,
+                                 uint64_t vpub_out
+                                ) :
+    publicInValue(v_size), publicOutValue(v_size), serialNumber_1(sn_size), serialNumber_2(sn_size), MAC_1(h_size), MAC_2(h_size)
+{
+    assert(inputs.size() <= 2);
+    assert(outputs.size() <= 2);
+    
+    {
+        while (inputs.size() < 2) {
+            // Push a dummy input of value 0.
+            inputs.push_back(PourInput(params.getTreeDepth()));
+        }
+    }
+
+    {
+        while (outputs.size() < 2) {
+            // Push a dummy output of value 0.
+            outputs.push_back(PourOutput());
+        }
+    }
+
+    assert(inputs.size() == 2);
+    assert(outputs.size() == 2);
+
+    init(1,
+         params,
+         rt,
+         inputs[0].old_coin,
+         inputs[1].old_coin,
+         inputs[0].old_address,
+         inputs[1].old_address,
+         inputs[0].merkle_index,
+         inputs[1].merkle_index,
+         inputs[0].path,
+         inputs[1].path,
+         outputs[0].to_address,
+         outputs[1].to_address,
+         vpub_in,
+         vpub_out,
+         pubkeyHash,
+         outputs[0].new_coin,
+         outputs[1].new_coin);
 }
 
 PourTransaction::PourTransaction(uint16_t version_num,
@@ -62,6 +114,29 @@ PourTransaction::PourTransaction(uint16_t version_num,
                                  const Coin& c_1_new,
                                  const Coin& c_2_new) :
     publicInValue(v_size), publicOutValue(v_size), serialNumber_1(sn_size), serialNumber_2(sn_size), MAC_1(h_size), MAC_2(h_size)
+{
+    init(version_num, params, rt, c_1_old, c_2_old, addr_1_old, addr_2_old, patMerkleIdx_1, patMerkleIdx_2,
+         patMAC_1, patMAC_2, addr_1_new, addr_2_new, v_pub_in, v_pub_out, pubkeyHash, c_1_new, c_2_new);
+}
+
+void PourTransaction::init(uint16_t version_num,
+                     ZerocashParams& params,
+                     const MerkleRootType& rt,
+                     const Coin& c_1_old,
+                     const Coin& c_2_old,
+                     const Address& addr_1_old,
+                     const Address& addr_2_old,
+                     const size_t patMerkleIdx_1,
+                     const size_t patMerkleIdx_2,
+                     const merkle_authentication_path& patMAC_1,
+                     const merkle_authentication_path& patMAC_2,
+                     const PublicAddress& addr_1_new,
+                     const PublicAddress& addr_2_new,
+                     uint64_t v_pub_in,
+                     uint64_t v_pub_out,
+                     const std::vector<unsigned char>& pubkeyHash,
+                     const Coin& c_1_new,
+                     const Coin& c_2_new)
 {
     this->version = version_num;
 
@@ -200,7 +275,7 @@ PourTransaction::PourTransaction(uint16_t version_num,
     convertVectorToBytesVector(MAC_2_bv, this->MAC_2);
 
     if(this->version > 0){
-        zerocash_pour_proof<ZerocashParams::zerocash_pp> proofObj = zerocash_pour_ppzksnark_prover<ZerocashParams::zerocash_pp>(params.getProvingKey(),
+        auto proofObj = zerocash_pour_ppzksnark_prover<ZerocashParams::zerocash_pp>(params.getProvingKey(),
             { patMAC_1, patMAC_2 },
             { patMerkleIdx_1, patMerkleIdx_2 },
             root_bv,
@@ -216,9 +291,13 @@ PourTransaction::PourTransaction(uint16_t version_num,
             { val_old_1_bv, val_old_2_bv },
             h_S_bv);
 
-        std::stringstream ss;
-        ss << proofObj;
-        this->zkSNARK = ss.str();
+        if (!proofObj) {
+            this->zkSNARK = std::string("fail");
+        } else {
+            std::stringstream ss;
+            ss << (*proofObj);
+            this->zkSNARK = ss.str();
+        }
     }else{
  	   this->zkSNARK = std::string(1235,'A');
     }
@@ -291,6 +370,11 @@ bool PourTransaction::verify(ZerocashParams& params,
 	if(this->version == 0){
 		return true;
 	}
+
+    // FIXME
+    if (this->zkSNARK == "fail") {
+        return false;
+    }
 
     zerocash_pour_proof<ZerocashParams::zerocash_pp> proof_SNARK;
     std::stringstream ss;

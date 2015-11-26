@@ -283,7 +283,7 @@ void test_zerocash_pour_ppzksnark(const size_t num_old_coins, const size_t num_n
     zerocash_pour_keypair<ppT> keypair = zerocash_pour_ppzksnark_generator<ppT>(num_old_coins, num_new_coins, tree_depth);
     keypair = reserialize<zerocash_pour_keypair<ppT> >(keypair);
 
-    zerocash_pour_proof<ppT> proof = zerocash_pour_ppzksnark_prover<ppT>(keypair.pk,
+    zerocash_pour_proof<ppT> proof = *zerocash_pour_ppzksnark_prover<ppT>(keypair.pk,
                                                                          old_coin_authentication_paths,
                                                                          old_coin_merkle_tree_positions,
                                                                          merkle_tree_root,

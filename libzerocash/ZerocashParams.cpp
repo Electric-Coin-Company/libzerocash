@@ -26,6 +26,11 @@ static void throw_missing_param_file_exception(std::string paramtype, std::strin
 
 namespace libzerocash {
 
+int ZerocashParams::getTreeDepth()
+{
+    return treeDepth;
+}
+
 zerocash_pour_keypair<ZerocashParams::zerocash_pp> ZerocashParams::GenerateNewKeyPair(const unsigned int tree_depth)
 {
     libzerocash::ZerocashParams::zerocash_pp::init_public_params();

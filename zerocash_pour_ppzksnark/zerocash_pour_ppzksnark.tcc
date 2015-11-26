@@ -16,6 +16,7 @@
 
 #include "zerocash_pour_ppzksnark/zerocash_pour_gadget.hpp"
 #include "common/profiling.hpp"
+#include <boost/optional.hpp>
 
 namespace libzerocash {
 
@@ -129,7 +130,7 @@ zerocash_pour_keypair<ppzksnark_ppT> zerocash_pour_ppzksnark_generator(const siz
 }
 
 template<typename ppzksnark_ppT>
-zerocash_pour_proof<ppzksnark_ppT> zerocash_pour_ppzksnark_prover(const zerocash_pour_proving_key<ppzksnark_ppT> &pk,
+boost::optional<zerocash_pour_proof<ppzksnark_ppT>> zerocash_pour_ppzksnark_prover(const zerocash_pour_proving_key<ppzksnark_ppT> &pk,
                                                                   const std::vector<merkle_authentication_path> &old_coin_authentication_paths,
                                                                   const std::vector<size_t> &old_coin_merkle_tree_positions,
                                                                   const bit_vector &merkle_tree_root,
@@ -166,7 +167,11 @@ zerocash_pour_proof<ppzksnark_ppT> zerocash_pour_ppzksnark_prover(const zerocash
                             public_out_value,
                             old_coin_values,
                             signature_public_key_hash);
-    assert(pb.is_satisfied());
+    if (!pb.is_satisfied()) {
+      leave_block("Call to zerocash_pour_ppzksnark_prover");
+      return boost::none;
+    }
+
     zerocash_pour_proof<ppzksnark_ppT> proof = r1cs_ppzksnark_prover<ppzksnark_ppT>(pk.r1cs_pk, pb.primary_input(), pb.auxiliary_input());
 
     leave_block("Call to zerocash_pour_ppzksnark_prover");
