@@ -308,9 +308,6 @@ void zerocash_pour_gadget<FieldT>::generate_r1cs_constraints()
         {
             generate_boolean_r1cs_constraint<FieldT>(this->pb, new_coin_value_variables[i][j], FMT(this->annotation_prefix, " new_coin_value_variables_%zu_%zu", i, j));
         }
-
-        generate_boolean_r1cs_constraint<FieldT>(this->pb, public_in_value_variable[j], FMT(this->annotation_prefix, " public_in_value_variable_%zu", j));
-        generate_boolean_r1cs_constraint<FieldT>(this->pb, public_out_value_variable[j], FMT(this->annotation_prefix, " public_out_value_variable_%zu", j));
     }
 
     for (size_t i = 0; i < num_old_coins; ++i)
