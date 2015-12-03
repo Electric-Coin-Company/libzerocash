@@ -470,17 +470,11 @@ const CoinCommitmentValue& PourTransaction::getNewCoinCommitmentValue2() const{
 	return this->cm_2.getCommitmentValue();
 }
 
-/**
- * Returns the amount of money this transaction converts back into basecoin.
- */
-uint64_t PourTransaction::getMonetaryValueIn() const{
+uint64_t PourTransaction::getPublicValueIn() const{
     return convertBytesVectorToInt(this->publicInValue);
 }
 
-/**
- * Returns the amount of money this transaction converts back into basecoin.
- */
-uint64_t PourTransaction::getMonetaryValueOut() const{
+uint64_t PourTransaction::getPublicValueOut() const{
 	return convertBytesVectorToInt(this->publicOutValue);
 }
 

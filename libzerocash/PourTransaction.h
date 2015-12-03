@@ -126,19 +126,9 @@ public:
      */
     const CoinCommitmentValue& getNewCoinCommitmentValue2() const;
 
-    /**
-     * Returns the amount of money this transaction wishes to convert from basecoin.
-     *
-     * @return the value
-     */
-    uint64_t getMonetaryValueIn() const;
+    uint64_t getPublicValueIn() const;
 
-    /**
-     * Returns the amount of money this transaction wishes to convert back into basecoin.
-     *
-     * @return the value
-     */
-    uint64_t getMonetaryValueOut() const;
+    uint64_t getPublicValueOut() const;
 
     ADD_SERIALIZE_METHODS;
 
