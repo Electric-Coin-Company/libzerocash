@@ -40,6 +40,16 @@ BOOST_AUTO_TEST_CASE( testConvertVectorToInt ) {
     BOOST_CHECK(libzerocash::convertVectorToInt({1,1,0}) == 6);
 
     BOOST_CHECK_THROW(libzerocash::convertVectorToInt(std::vector<bool>(100)), std::length_error);
+
+    {
+        std::vector<bool> v(63, 1);
+        BOOST_CHECK(libzerocash::convertVectorToInt(v) == 0x7fffffffffffffff);
+    }
+
+    {
+        std::vector<bool> v(64, 1);
+        BOOST_CHECK(libzerocash::convertVectorToInt(v) == 0xffffffffffffffff);
+    }
 }
 
 BOOST_AUTO_TEST_CASE( testConvertBytesToVector ) {
