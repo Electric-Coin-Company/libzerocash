@@ -58,18 +58,14 @@ PourTransaction::PourTransaction(ZerocashParams& params,
     assert(inputs.size() <= 2);
     assert(outputs.size() <= 2);
     
-    {
-        while (inputs.size() < 2) {
-            // Push a dummy input of value 0.
-            inputs.push_back(PourInput(params.getTreeDepth()));
-        }
+    while (inputs.size() < 2) {
+        // Push a dummy input of value 0.
+        inputs.push_back(PourInput(params.getTreeDepth()));
     }
 
-    {
-        while (outputs.size() < 2) {
-            // Push a dummy output of value 0.
-            outputs.push_back(PourOutput());
-        }
+    while (outputs.size() < 2) {
+        // Push a dummy output of value 0.
+        outputs.push_back(PourOutput());
     }
 
     assert(inputs.size() == 2);
