@@ -15,14 +15,6 @@
 
 namespace libzerocash {
 
-PourOutput::PourOutput() {
-	Address dummy_to_address;
-
-	this->to_address = dummy_to_address.getPublicAddress();
-	this->new_coin = Coin(dummy_to_address.getPublicAddress(), 0);
-}
-
-// TODO: this is a generalization of the other constructor
 PourOutput::PourOutput(uint64_t val) {
 	Address dummy_to_address;
 

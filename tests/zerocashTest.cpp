@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE( PourInputOutputTest ) {
 
     // dummy output
     {
-        libzerocash::PourOutput output;
+        libzerocash::PourOutput output(0);
 
         BOOST_CHECK(output.new_coin.getValue() == 0);
         BOOST_CHECK(output.to_address == output.new_coin.getPublicAddress());

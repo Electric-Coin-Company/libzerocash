@@ -19,7 +19,6 @@ namespace libzerocash {
 
 class PourOutput {
 public:
-	PourOutput();
 	PourOutput(uint64_t val);
     PourOutput(const Coin new_coin,
               const PublicAddress to_address);

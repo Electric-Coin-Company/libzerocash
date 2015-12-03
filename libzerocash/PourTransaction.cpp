@@ -55,8 +55,9 @@ PourTransaction::PourTransaction(ZerocashParams& params,
                                 ) :
     publicInValue(v_size), publicOutValue(v_size), serialNumber_1(sn_size), serialNumber_2(sn_size), MAC_1(h_size), MAC_2(h_size)
 {
-    assert(inputs.size() <= 2);
-    assert(outputs.size() <= 2);
+    if (inputs.size() <= 2 || outputs.size() <= 2) {
+        throw "PourTransaction provided with too many inputs or outputs";
+    }
     
     while (inputs.size() < 2) {
         // Push a dummy input of value 0.
@@ -65,11 +66,8 @@ PourTransaction::PourTransaction(ZerocashParams& params,
 
     while (outputs.size() < 2) {
         // Push a dummy output of value 0.
-        outputs.push_back(PourOutput());
+        outputs.push_back(PourOutput(0));
     }
-
-    assert(inputs.size() == 2);
-    assert(outputs.size() == 2);
 
     init(1,
          params,
