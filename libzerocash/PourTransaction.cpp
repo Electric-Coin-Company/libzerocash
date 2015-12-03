@@ -287,14 +287,10 @@ void PourTransaction::init(uint16_t version_num,
             { val_old_1_bv, val_old_2_bv },
             h_S_bv);
 
-        if (!proofObj) {
-            this->zkSNARK = std::string("fail");
-        } else {
-            std::stringstream ss;
-            ss << (*proofObj);
-            this->zkSNARK = ss.str();
-        }
-    }else{
+        std::stringstream ss;
+        ss << proofObj;
+        this->zkSNARK = ss.str();
+    } else {
  	   this->zkSNARK = std::string(1235,'A');
     }
 
@@ -366,11 +362,6 @@ bool PourTransaction::verify(ZerocashParams& params,
 	if(this->version == 0){
 		return true;
 	}
-
-    // FIXME
-    if (this->zkSNARK == "fail") {
-        return false;
-    }
 
     zerocash_pour_proof<ZerocashParams::zerocash_pp> proof_SNARK;
     std::stringstream ss;

@@ -41,7 +41,6 @@
 
 #include "libsnark/common/data_structures/merkle_tree.hpp"
 #include "libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp"
-#include <boost/optional.hpp>
 
 namespace libzerocash {
 
@@ -195,21 +194,21 @@ zerocash_pour_keypair<ppzksnark_ppT> zerocash_pour_ppzksnark_generator(const siz
  * TODO: add description
  */
 template<typename ppzksnark_ppT>
-boost::optional<zerocash_pour_proof<ppzksnark_ppT>> zerocash_pour_ppzksnark_prover(const zerocash_pour_proving_key<ppzksnark_ppT> &pk,
-                                                                                    const std::vector<merkle_authentication_path> &old_coin_authentication_paths,
-                                                                                    const std::vector<size_t> &old_coin_merkle_tree_positions,
-                                                                                    const bit_vector &merkle_tree_root,
-                                                                                    const std::vector<bit_vector> &new_address_public_keys,
-                                                                                    const std::vector<bit_vector> &old_address_secret_keys,
-                                                                                    const std::vector<bit_vector> &new_address_commitment_nonces,
-                                                                                    const std::vector<bit_vector> &old_address_commitment_nonces,
-                                                                                    const std::vector<bit_vector> &new_coin_serial_number_nonces,
-                                                                                    const std::vector<bit_vector> &old_coin_serial_number_nonces,
-                                                                                    const std::vector<bit_vector> &new_coin_values,
-                                                                                    const bit_vector &public_in_value,
-                                                                                    const bit_vector &public_out_value,
-                                                                                    const std::vector<bit_vector> &old_coin_values,
-                                                                                    const bit_vector &signature_public_key_hash);
+zerocash_pour_proof<ppzksnark_ppT> zerocash_pour_ppzksnark_prover(const zerocash_pour_proving_key<ppzksnark_ppT> &pk,
+                                                                  const std::vector<merkle_authentication_path> &old_coin_authentication_paths,
+                                                                  const std::vector<size_t> &old_coin_merkle_tree_positions,
+                                                                  const bit_vector &merkle_tree_root,
+                                                                  const std::vector<bit_vector> &new_address_public_keys,
+                                                                  const std::vector<bit_vector> &old_address_secret_keys,
+                                                                  const std::vector<bit_vector> &new_address_commitment_nonces,
+                                                                  const std::vector<bit_vector> &old_address_commitment_nonces,
+                                                                  const std::vector<bit_vector> &new_coin_serial_number_nonces,
+                                                                  const std::vector<bit_vector> &old_coin_serial_number_nonces,
+                                                                  const std::vector<bit_vector> &new_coin_values,
+                                                                  const bit_vector &public_in_value,
+                                                                  const bit_vector &public_out_value,
+                                                                  const std::vector<bit_vector> &old_coin_values,
+                                                                  const bit_vector &signature_public_key_hash);
 
 /**
  * A verifier algorithm for the Pour ppzkSNARK.
