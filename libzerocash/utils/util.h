@@ -2,6 +2,7 @@
 #define UTIL_H_
 
 #include <string>
+#include <stdexcept>
 #include <vector>
 
 #include "sha256.h"

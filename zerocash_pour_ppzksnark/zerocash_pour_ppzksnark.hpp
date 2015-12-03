@@ -41,6 +41,7 @@
 
 #include "libsnark/common/data_structures/merkle_tree.hpp"
 #include "libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp"
+#include <stdexcept>
 
 namespace libzerocash {
 

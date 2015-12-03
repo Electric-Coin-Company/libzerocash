@@ -18,6 +18,7 @@
 #include "Zerocash.h"
 #include "PourInput.h"
 #include "PourOutput.h"
+#include <stdexcept>
 
 typedef std::vector<unsigned char> CoinCommitmentValue;
 
