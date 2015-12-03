@@ -168,7 +168,7 @@ zerocash_pour_proof<ppzksnark_ppT> zerocash_pour_ppzksnark_prover(const zerocash
                             signature_public_key_hash);
     if (!pb.is_satisfied()) {
       leave_block("Call to zerocash_pour_ppzksnark_prover");
-      throw 0;
+      throw std::invalid_argument("Constraints not satisfied by inputs");
     }
 
     zerocash_pour_proof<ppzksnark_ppT> proof = r1cs_ppzksnark_prover<ppzksnark_ppT>(pk.r1cs_pk, pb.primary_input(), pb.auxiliary_input());

@@ -29,6 +29,19 @@ BOOST_AUTO_TEST_CASE( testGetRandBytes ) {
     BOOST_CHECK( memcmp(bytes1, bytes1+16, 16) != 0 );
 }
 
+BOOST_AUTO_TEST_CASE( testConvertVectorToInt ) {
+    BOOST_CHECK(libzerocash::convertVectorToInt({0}) == 0);
+    BOOST_CHECK(libzerocash::convertVectorToInt({1}) == 1);
+    BOOST_CHECK(libzerocash::convertVectorToInt({0,1}) == 1);
+    BOOST_CHECK(libzerocash::convertVectorToInt({1,0}) == 2);
+    BOOST_CHECK(libzerocash::convertVectorToInt({1,1}) == 3);
+    BOOST_CHECK(libzerocash::convertVectorToInt({1,0,0}) == 4);
+    BOOST_CHECK(libzerocash::convertVectorToInt({1,0,1}) == 5);
+    BOOST_CHECK(libzerocash::convertVectorToInt({1,1,0}) == 6);
+
+    BOOST_CHECK_THROW(libzerocash::convertVectorToInt(std::vector<bool>(100)), std::length_error);
+}
+
 BOOST_AUTO_TEST_CASE( testConvertBytesToVector ) {
     unsigned char bytes[5] = {0x00, 0x01, 0x03, 0x12, 0xFF};
     std::vector<bool> v1(5*8);

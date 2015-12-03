@@ -305,15 +305,11 @@ bool test_pour(libzerocash::ZerocashParams& p,
         pour_outputs.push_back(libzerocash::PourOutput(*it));
     }
 
-    try {
-        libzerocash::PourTransaction pourtx(p, as, rt, pour_inputs, pour_outputs, vpub_in, vpub_out);
+    libzerocash::PourTransaction pourtx(p, as, rt, pour_inputs, pour_outputs, vpub_in, vpub_out);
 
-        assert(pourtx.verify(p, as, rt));
+    assert(pourtx.verify(p, as, rt));
 
-        return true;
-    } catch(...) {
-        return false;
-    }
+    return true;
 }
 
 BOOST_AUTO_TEST_CASE( PourVpubInTest ) {
@@ -335,17 +331,17 @@ BOOST_AUTO_TEST_CASE( PourVpubInTest ) {
     BOOST_CHECK(test_pour(p, 1, 0, {2, 2}, {2, 3}));
 
     // Things that should not work...
-    BOOST_CHECK(!test_pour(p, 0, 1, {1}, {1}));
-    BOOST_CHECK(!test_pour(p, 0, 1, {2}, {1, 1}));
-    BOOST_CHECK(!test_pour(p, 0, 1, {2, 2}, {3, 1}));
-    BOOST_CHECK(!test_pour(p, 0, 2, {1}, {}));
-    BOOST_CHECK(!test_pour(p, 0, 2, {2}, {1}));
-    BOOST_CHECK(!test_pour(p, 0, 2, {2, 2}, {2, 1}));
-    BOOST_CHECK(!test_pour(p, 1, 1, {}, {1}));
-    BOOST_CHECK(!test_pour(p, 1, 1, {1}, {1, 1}));
-    BOOST_CHECK(!test_pour(p, 1, 1, {2, 2}, {2, 3}));
+    BOOST_CHECK_THROW(test_pour(p, 0, 1, {1}, {1}), std::invalid_argument);
+    BOOST_CHECK_THROW(test_pour(p, 0, 1, {2}, {1, 1}), std::invalid_argument);
+    BOOST_CHECK_THROW(test_pour(p, 0, 1, {2, 2}, {3, 1}), std::invalid_argument);
+    BOOST_CHECK_THROW(test_pour(p, 0, 2, {1}, {}), std::invalid_argument);
+    BOOST_CHECK_THROW(test_pour(p, 0, 2, {2}, {1}), std::invalid_argument);
+    BOOST_CHECK_THROW(test_pour(p, 0, 2, {2, 2}, {2, 1}), std::invalid_argument);
+    BOOST_CHECK_THROW(test_pour(p, 1, 1, {}, {1}), std::invalid_argument);
+    BOOST_CHECK_THROW(test_pour(p, 1, 1, {1}, {1, 1}), std::invalid_argument);
+    BOOST_CHECK_THROW(test_pour(p, 1, 1, {2, 2}, {2, 3}), std::invalid_argument);
 
-    BOOST_CHECK(!test_pour(p, 0, 0, {2, 2}, {2, 3}));
+    BOOST_CHECK_THROW(test_pour(p, 0, 0, {2, 2}, {2, 3}), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE( CoinTest ) {
