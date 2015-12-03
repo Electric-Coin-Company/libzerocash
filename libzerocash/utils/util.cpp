@@ -146,6 +146,21 @@ void convertIntToBytesVector(const uint64_t val_int, std::vector<unsigned char>&
     }
 }
 
+uint64_t convertVectorToInt(const std::vector<bool>& v) {
+    if (v.size() > 64) {
+        throw std::length_error ("boolean vector can't be larger than 64 bits");
+    }
+
+    uint64_t result = 0;
+    for (size_t i=0; i<v.size();i++) {
+        if (v.at(i)) {
+            result |= (uint64_t)1 << ((v.size() - 1) - i);
+        }
+    }
+
+    return result;
+}
+
 uint64_t convertBytesVectorToInt(const std::vector<unsigned char>& bytes) {
     uint64_t val_int = 0;
 

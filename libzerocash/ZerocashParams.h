@@ -37,6 +37,7 @@ public:
 
     const zerocash_pour_proving_key<zerocash_pp>& getProvingKey();
     const zerocash_pour_verification_key<zerocash_pp>& getVerificationKey();
+    int getTreeDepth();
     ~ZerocashParams();
 
     static const size_t numPourInputs = 2;

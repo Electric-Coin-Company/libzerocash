@@ -39,6 +39,8 @@ SRCS= \
 	$(LIBZEROCASH)/CoinCommitment.cpp \
 	$(LIBZEROCASH)/Coin.cpp \
 	$(LIBZEROCASH)/MintTransaction.cpp \
+	$(LIBZEROCASH)/PourInput.cpp \
+	$(LIBZEROCASH)/PourOutput.cpp \
 	$(LIBZEROCASH)/PourTransaction.cpp \
 	$(LIBZEROCASH)/ZerocashParams.cpp \
 	$(TESTUTILS)/timer.cpp

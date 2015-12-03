@@ -2,6 +2,7 @@
 #define UTIL_H_
 
 #include <string>
+#include <stdexcept>
 #include <vector>
 
 #include "sha256.h"
@@ -41,6 +42,8 @@ void convertBytesVectorToVector(const std::vector<unsigned char>& bytes, std::ve
 void convertVectorToBytesVector(const std::vector<bool>& v, std::vector<unsigned char>& bytes);
 
 void convertIntToBytesVector(const uint64_t val_int, std::vector<unsigned char>& bytes);
+
+uint64_t convertVectorToInt(const std::vector<bool>& v);
 
 uint64_t convertBytesVectorToInt(const std::vector<unsigned char>& bytes);
 
