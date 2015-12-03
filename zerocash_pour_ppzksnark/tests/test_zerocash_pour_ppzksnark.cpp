@@ -256,28 +256,28 @@ void test_zerocash_pour_ppzksnark(const size_t num_old_coins, const size_t num_n
     }
 
     /* perform basic sanity checks */
-#ifdef DEBUG
-    protoboard<FieldT> pb;
-    zerocash_pour_gadget<FieldT> pour(pb, num_old_coins, num_new_coins, tree_depth, "pour");
-    pour.generate_r1cs_constraints();
-    pour.generate_r1cs_witness(old_coin_authentication_paths,
-                               old_coin_merkle_tree_positions,
-                               merkle_tree_root,
-                               new_address_public_keys,
-                               old_address_secret_keys,
-                               new_address_commitment_nonces,
-                               old_address_commitment_nonces,
-                               new_coin_serial_number_nonces,
-                               old_coin_serial_number_nonces,
-                               new_coin_values,
-                               public_in_value,
-                               public_out_value,
-                               old_coin_values,
-                               signature_public_key_hash);
-    assert(pb.is_satisfied());
-    printf("gadget test OK for num_old_coins = %zu, num_new_coins = %zu, tree_depth = %zu\n",
-           num_old_coins, num_new_coins, tree_depth);
-#endif
+    {
+        protoboard<FieldT> pb;
+        zerocash_pour_gadget<FieldT> pour(pb, num_old_coins, num_new_coins, tree_depth, "pour");
+        pour.generate_r1cs_constraints();
+        pour.generate_r1cs_witness(old_coin_authentication_paths,
+                                   old_coin_merkle_tree_positions,
+                                   merkle_tree_root,
+                                   new_address_public_keys,
+                                   old_address_secret_keys,
+                                   new_address_commitment_nonces,
+                                   old_address_commitment_nonces,
+                                   new_coin_serial_number_nonces,
+                                   old_coin_serial_number_nonces,
+                                   new_coin_values,
+                                   public_in_value,
+                                   public_out_value,
+                                   old_coin_values,
+                                   signature_public_key_hash);
+        assert(pb.is_satisfied());
+        printf("gadget test OK for num_old_coins = %zu, num_new_coins = %zu, tree_depth = %zu\n",
+               num_old_coins, num_new_coins, tree_depth);
+    }
 
     /* do the end-to-end test */
     zerocash_pour_keypair<ppT> keypair = zerocash_pour_ppzksnark_generator<ppT>(num_old_coins, num_new_coins, tree_depth);
