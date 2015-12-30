@@ -80,6 +80,10 @@ void hashVectors(const std::vector<unsigned char> left, const std::vector<unsign
 
 bool VectorIsZero(const std::vector<bool> test);
 
+size_t countOnes(const std::vector<bool>& vec);
+
+std::vector<unsigned char> vectorSlice(const std::vector<unsigned char>& vec, size_t start, size_t length);
+
 } /* namespace libzerocash */
 #endif /* UTIL_H_ */
 
