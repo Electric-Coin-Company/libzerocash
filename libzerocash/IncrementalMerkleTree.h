@@ -44,13 +44,15 @@ public:
     uint32_t getTreeHeight() { return treeHeight; }
     std::vector< std::vector<unsigned char> > const& getHashVec() { return hashVec; }
     std::vector< bool > const& getHashList() { return hashList; }
-    std::vector< unsigned char > const& getHashListBytes() { return hashListBytes; }
+
+    std::vector<unsigned char> serialize();
+    static IncrementalMerkleTreeCompact Deserialize(std::vector<unsigned char> serialized);
+
 private:
     IncrementalMerkleTreeCompact() : treeHeight(0) {}
     uint32_t treeHeight;
     std::vector< std::vector<unsigned char> > hashVec;
     std::vector< bool > hashList;
-    std::vector< unsigned char > hashListBytes;
 };
 
 /********************* Incremental Merkle tree node **************************/

@@ -45,17 +45,6 @@ void constructZeroTestVector(std::vector< std::vector<bool> > &values, uint32_t 
     }
 }
 
-size_t countOnes(std::vector<bool> bits)
-{
-    size_t count = 0;
-    for (size_t i = 0; i < bits.size(); i++) {
-        if (bits.at(i)) {
-            count++;
-        }
-    }
-    return count;
-}
-
 BOOST_AUTO_TEST_CASE( testRootOfTreeOfZerosIsZero ) {
     IncrementalMerkleTree incTree;
     std::vector< std::vector<bool> > values;
@@ -115,10 +104,16 @@ BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
 
         // Make sure the paths match.
         BOOST_REQUIRE( compact.getHashList() == path_bits );
-        BOOST_REQUIRE( compact.getHashListBytes() == path_bytes );
 
         // Make sure there's a hash for every '1' bit down the path.
-        BOOST_REQUIRE( compact.getHashVec().size() == countOnes(path_bits) );
+        BOOST_REQUIRE( compact.getHashVec().size() == libzerocash::countOnes(path_bits) );
+
+        /* Test serializing and deserializing. */
+        std::vector<unsigned char> serializedCompact = compact.serialize();
+        IncrementalMerkleTreeCompact deserializedCompact = IncrementalMerkleTreeCompact::Deserialize(serializedCompact);
+        BOOST_REQUIRE(compact.getTreeHeight() == deserializedCompact.getTreeHeight());
+        BOOST_REQUIRE(compact.getHashList() == deserializedCompact.getHashList());
+        BOOST_REQUIRE(compact.getHashVec() == deserializedCompact.getHashVec());
 
         // Make sure 'restoring' the tree results in the same root.
         IncrementalMerkleTree newTree(compact);
@@ -126,4 +121,33 @@ BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
         incTree.getRootValue(root2);
         BOOST_REQUIRE( root1 == root2 );
     }
+}
+
+BOOST_AUTO_TEST_CASE( testCompactDeserializationFailures ) {
+    IncrementalMerkleTree incTree(64);
+    std::vector< std::vector<bool> > values;
+    constructNonzeroTestVector(values, 5);
+    BOOST_REQUIRE( incTree.insertVector(values) );
+    BOOST_REQUIRE( incTree.prune() );
+    IncrementalMerkleTreeCompact compact = incTree.getCompactRepresentation();
+
+    /* Base the following tests off of this valid serialization. */
+    std::vector<unsigned char> serialized = compact.serialize();
+
+    /* Should fail if we truncate any number of bytes off the end. */
+    for (size_t trunc_len = 0; trunc_len < serialized.size(); trunc_len++) {
+        std::vector<unsigned char> truncated(serialized.begin(), serialized.begin() + trunc_len);
+        BOOST_CHECK_THROW(
+            IncrementalMerkleTreeCompact::Deserialize(truncated),
+            std::out_of_range
+        );
+    }
+
+    /* Should fail if we append any number of extra bytes on the end. */
+    std::vector<unsigned char> extra_byte = serialized;
+    extra_byte.push_back(0x00);
+    BOOST_CHECK_THROW(
+        IncrementalMerkleTreeCompact::Deserialize(extra_byte),
+        std::runtime_error
+    );
 }

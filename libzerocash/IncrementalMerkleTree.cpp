@@ -22,6 +22,82 @@
 namespace libzerocash {
 
     /////////////////////////////////////////////
+    // IncrementalMerkleTreeCompact class
+    /////////////////////////////////////////////
+
+    std::vector<unsigned char> IncrementalMerkleTreeCompact::serialize() {
+        /* Serialization format:
+         *  treeHeight (4 bytes, big endian)
+         *  hashList (ceil(treeHeight / 8) bytes)
+         *  hashVec (32 bytes for every 1 bit in hashList)
+         */
+        std::vector<unsigned char> serialized;
+
+        /* treeHeight (4 bytes, big endian) */
+        std::vector<unsigned char> treeHeightBytes(4);
+        convertIntToBytesVector((uint64_t)this->treeHeight, treeHeightBytes);
+        serialized.insert(serialized.end(), treeHeightBytes.begin(), treeHeightBytes.end());
+
+        /* hashList */
+        assert(this->hashList.size() == this->treeHeight);
+
+        /* Pad it out to a multiple of 8 bits. */
+        std::vector<bool> hashList = this->hashList;
+        if (hashList.size() % 8 != 0) {
+            hashList.insert(hashList.begin(), 8 - (hashList.size() % 8), false);
+        }
+        assert(hashList.size() % 8 == 0);
+
+        /* Convert it to a byte vector. */
+        std::vector<unsigned char> hashListBytes(hashList.size() / 8);
+        convertVectorToBytesVector(hashList, hashListBytes);
+        serialized.insert(serialized.end(), hashListBytes.begin(), hashListBytes.end());
+
+        /* hashVec */
+        assert(this->hashVec.size() == countOnes(this->hashList));
+        for (uint32_t i = 0; i < this->hashVec.size(); i++) {
+            assert(this->hashVec.at(i).size() == 32);
+            serialized.insert(serialized.end(), this->hashVec.at(i).begin(), this->hashVec.at(i).end());
+        }
+
+        return serialized;
+    }
+
+    IncrementalMerkleTreeCompact IncrementalMerkleTreeCompact::Deserialize(std::vector<unsigned char> serialized) {
+        IncrementalMerkleTreeCompact deserialized;
+
+        size_t currentPos = 0;
+
+
+        /* treeHeight */
+        std::vector<unsigned char> treeHeightBytes = vectorSlice(serialized, 0, 4);
+        currentPos += 4;
+        deserialized.treeHeight = convertBytesVectorToInt(treeHeightBytes);
+
+        /* hashList */
+        uint32_t hashListBytesLength = ceil(deserialized.treeHeight / 8.0);
+        std::vector<unsigned char> hashListBytes = vectorSlice(serialized, currentPos, hashListBytesLength);
+        currentPos += hashListBytesLength;
+        convertBytesVectorToVector(hashListBytes, deserialized.hashList);
+        /* Remove the multiple-of-8-bits padding. */
+        deserialized.hashList.resize(deserialized.treeHeight);
+
+        /* hashVec */
+        size_t hashVecSize = countOnes(deserialized.hashList);
+        for (size_t i = 0; i < hashVecSize; i++) {
+            std::vector<unsigned char> hashVecElement = vectorSlice(serialized, currentPos, 32);
+            currentPos += 32;
+            deserialized.hashVec.push_back(hashVecElement);
+        }
+
+        if (currentPos != serialized.size()) {
+            throw std::runtime_error("Serialized vector is longer than expected.");
+        }
+
+        return deserialized;
+    }
+
+    /////////////////////////////////////////////
     // IncrementalMerkleTree class
     /////////////////////////////////////////////
 
@@ -46,20 +122,9 @@ namespace libzerocash {
     //
     IncrementalMerkleTree::IncrementalMerkleTree(IncrementalMerkleTreeCompact &compact) : root(0, 0)
 	{
-
-		// Initialize the tree
-		this->treeHeight = compact.getHeight();
-		root.treeHeight = treeHeight;
-
-		// Make sure we convert from the integer vector to the bool vector
-		libzerocash::convertBytesVectorToVector(compact.hashListBytes, compact.hashList);
-
-		// Size the vector to the tree depth
-		if (compact.hashList.size() > this->treeHeight) {
-			compact.hashList.erase(compact.hashList.begin(), compact.hashList.begin() + (compact.hashList.size() - this->treeHeight));
-		} else if (compact.hashList.size() < this->treeHeight) {
-			compact.hashList.insert(compact.hashList.begin(), (this->treeHeight) - compact.hashList.size(), false);
-		}
+        // Initialize the tree
+        this->treeHeight = compact.getHeight();
+        root.treeHeight = treeHeight;
 
         // Reconstitute tree from compact representation
         this->fromCompactRepresentation(compact);
@@ -181,14 +246,6 @@ namespace libzerocash {
         std::fill (rep.hashList.begin(), rep.hashList.end(), false);
 
 		this->root.getCompactRepresentation(rep);
-
-		// Convert the hashList into a bytesVector. First pad it to a multiple of 8 bits.
-		if (rep.hashList.size() % 8 != 0) {
-			rep.hashList.insert(rep.hashList.begin(), 8 - (rep.hashList.size() % 8), false);
-		}
-		rep.hashListBytes.resize(ceil(rep.hashList.size() / 8.0));
-		convertVectorToBytesVector(rep.hashList, rep.hashListBytes);
-
         return rep;
     }
 
