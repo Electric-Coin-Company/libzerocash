@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
 
         /* Test serializing and deserializing. */
         std::vector<unsigned char> serializedCompact = compact.serialize();
-        IncrementalMerkleTreeCompact deserializedCompact = IncrementalMerkleTreeCompact::Deserialize(serializedCompact);
+        IncrementalMerkleTreeCompact deserializedCompact = IncrementalMerkleTreeCompact::deserialize(serializedCompact);
         BOOST_REQUIRE(compact.getTreeHeight() == deserializedCompact.getTreeHeight());
         BOOST_REQUIRE(compact.getHashList() == deserializedCompact.getHashList());
         BOOST_REQUIRE(compact.getHashVec() == deserializedCompact.getHashVec());
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE( testCompactDeserializationFailures ) {
     for (size_t trunc_len = 0; trunc_len < serialized.size(); trunc_len++) {
         std::vector<unsigned char> truncated(serialized.begin(), serialized.begin() + trunc_len);
         BOOST_CHECK_THROW(
-            IncrementalMerkleTreeCompact::Deserialize(truncated),
+            IncrementalMerkleTreeCompact::deserialize(truncated),
             std::out_of_range
         );
     }
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE( testCompactDeserializationFailures ) {
     std::vector<unsigned char> extra_byte = serialized;
     extra_byte.push_back(0x00);
     BOOST_CHECK_THROW(
-        IncrementalMerkleTreeCompact::Deserialize(extra_byte),
+        IncrementalMerkleTreeCompact::deserialize(extra_byte),
         std::runtime_error
     );
 }

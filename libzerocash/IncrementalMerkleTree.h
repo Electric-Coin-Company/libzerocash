@@ -46,7 +46,7 @@ public:
     std::vector< bool > const& getHashList() { return hashList; }
 
     std::vector<unsigned char> serialize();
-    static IncrementalMerkleTreeCompact Deserialize(std::vector<unsigned char> serialized);
+    static IncrementalMerkleTreeCompact deserialize(const std::vector<unsigned char>& serialized);
 
 private:
     IncrementalMerkleTreeCompact() : treeHeight(0) {}
@@ -115,6 +115,15 @@ public:
 	std::vector<unsigned char>getRoot();
     bool prune();
     IncrementalMerkleTreeCompact getCompactRepresentation();
+    std::vector<unsigned char> serialize() {
+        auto compact = getCompactRepresentation();
+        return compact.serialize();
+    }
+
+    static IncrementalMerkleTree deserialize(const std::vector<unsigned char>& serialized) {
+        auto deserialized = IncrementalMerkleTreeCompact::deserialize(serialized);
+        return IncrementalMerkleTree(deserialized);
+    }
 
     bool fromCompactRepresentation(IncrementalMerkleTreeCompact &rep);
 

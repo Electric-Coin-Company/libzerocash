@@ -63,7 +63,7 @@ namespace libzerocash {
         return serialized;
     }
 
-    IncrementalMerkleTreeCompact IncrementalMerkleTreeCompact::Deserialize(std::vector<unsigned char> serialized) {
+    IncrementalMerkleTreeCompact IncrementalMerkleTreeCompact::deserialize(const std::vector<unsigned char>& serialized) {
         IncrementalMerkleTreeCompact deserialized;
 
         size_t currentPos = 0;
