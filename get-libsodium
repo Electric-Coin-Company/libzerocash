@@ -18,10 +18,8 @@ DEPINST=`pwd -P`/$DEPINST  # remember absolute path
 mkdir -p $DEPSRC
 cd $DEPSRC
 
-[ ! -d libsodium ] && git clone $LIBSODIUM_SRC libsodium
+[ ! -d libsodium ] && git clone -b 1.0.8 "$LIBSODIUM_SRC"  libsodium
 cd libsodium
-git pull
-git checkout 1.0.8
 ./autogen.sh
 ./configure --prefix=$DEPINST
 make
