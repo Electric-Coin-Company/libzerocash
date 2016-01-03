@@ -27,7 +27,7 @@ DEPINST=`pwd -P`/$DEPINST  # remember absolute path
 mkdir -p $DEPSRC
 cd $DEPSRC
 
-[ ! -d libsnark ] && git clone $LIBSNARK_SRC libsnark
+[ ! -d libsnark ] && git clone "$LIBSNARK_SRC" libsnark
 cd libsnark
 git pull
 if [ "$CURVE" == "BN128" ]; then

@@ -1,0 +1,26 @@
+#!/bin/bash
+# To pass options options to libsnark Makefile, put them in env var LIBSODIUM_FLAGS.
+# To clone libsnark from an alternate location, set env var LIBSODIUM_SRC. For example:
+#  LIBSODIUM_SRC="$HOME/libsodium.git --branch master" ./get-libsodium
+
+set -e
+
+LIBSODIUM_SRC=${LIBSODIUM_SRC:-https://github.com/jedisct1/libsodium/}
+
+set -x
+
+DEPSRC=./depsrc
+DEPINST=./depinst
+
+mkdir -p $DEPINST
+DEPINST=`pwd -P`/$DEPINST  # remember absolute path
+
+mkdir -p $DEPSRC
+cd $DEPSRC
+
+[ ! -d libsodium ] && git clone -b 1.0.8 "$LIBSODIUM_SRC"  libsodium
+cd libsodium
+./autogen.sh
+./configure --prefix=$DEPINST
+make
+make install
