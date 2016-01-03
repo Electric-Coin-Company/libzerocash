@@ -8,7 +8,7 @@ DEPINST=depinst
 LIBZEROCASH=libzerocash
 UTILS=$(LIBZEROCASH)/utils
 TESTUTILS=tests
-LDLIBS += -L $(DEPINST)/lib -Wl,-rpath $(DEPINST)/lib -L . -lsnark -lgmpxx -lgmp
+LDLIBS += -L $(DEPINST)/lib -Wl,-rpath $(DEPINST)/lib -L . -lsnark -lgmpxx -lgmp -lsodium
 
 ifeq ($(USE_MT),1)
 	LDLIBS += -lboost_system-mt
@@ -25,7 +25,7 @@ LDLIBS += -lrt
 endif
 
 
-CXXFLAGS += -I $(DEPINST)/include -I $(DEPINST)/include/libsnark -I . -DUSE_ASM -DCURVE_ALT_BN128
+CXXFLAGS += -I $(DEPINST)/include -I $(DEPINST)/include/libsnark -I $(DEPINST)/include/sodium -I . -DUSE_ASM -DCURVE_ALT_BN128
 
 LIBPATH = /usr/local/lib
 
