@@ -76,14 +76,14 @@ public:
     bool insertElement(const std::vector<bool> &hashV, std::vector<bool> &index);
     bool getWitness(const std::vector<bool> &index, merkle_authentication_path &witness);
     bool prune();
-    void getCompactRepresentation(IncrementalMerkleTreeCompact &rep);
+    void getCompactRepresentation(IncrementalMerkleTreeCompact &rep) const;
     bool fromCompactRepresentation(IncrementalMerkleTreeCompact &rep, uint32_t pos);
 
     // Utility methods
-    bool isLeaf()   { return (nodeDepth == treeHeight); }
-    bool isPruned() { return subtreePruned; }
-    bool hasFreeLeaves() { return (!subtreeFull); }
-    bool hasRightChildren() { if (!right) return false; return true; }
+    bool isLeaf() const  { return (nodeDepth == treeHeight); }
+    bool isPruned() const { return subtreePruned; }
+    bool hasFreeLeaves() const { return (!subtreeFull); }
+    bool hasRightChildren() const { if (!right) return false; return true; }
     void getValue(std::vector<bool> &r) { r = value; }
     std::vector<bool>& getValue() { return value; }
 
@@ -106,6 +106,11 @@ public:
     IncrementalMerkleTree(std::vector< std::vector<bool> > &valueVector, uint32_t height);
 	IncrementalMerkleTree(IncrementalMerkleTreeCompact &compact);
 
+    void setTo(const IncrementalMerkleTree &other) {
+        auto compact = other.getCompactRepresentation();
+        fromCompactRepresentation(compact);
+    }
+
     bool insertElement(const std::vector<bool> &hashV, std::vector<bool> &index);
 	bool insertElement(const std::vector<unsigned char> &hashV, std::vector<unsigned char> &index);
     bool insertVector(std::vector< std::vector<bool> > &valueVector);
@@ -114,7 +119,7 @@ public:
 	bool getRootValue(std::vector<unsigned char>& r);
 	std::vector<unsigned char>getRoot();
     bool prune();
-    IncrementalMerkleTreeCompact getCompactRepresentation();
+    IncrementalMerkleTreeCompact getCompactRepresentation() const;
     std::vector<unsigned char> serialize() {
         auto compact = getCompactRepresentation();
         return compact.serialize();

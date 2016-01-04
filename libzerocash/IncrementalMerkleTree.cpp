@@ -238,7 +238,7 @@ namespace libzerocash {
     }
 
     IncrementalMerkleTreeCompact
-    IncrementalMerkleTree::getCompactRepresentation()
+    IncrementalMerkleTree::getCompactRepresentation() const
     {
         IncrementalMerkleTreeCompact rep;
         rep.hashList.resize(this->treeHeight);
@@ -498,7 +498,7 @@ namespace libzerocash {
     }
 
     void
-    IncrementalMerkleNode::getCompactRepresentation(IncrementalMerkleTreeCompact &rep)
+    IncrementalMerkleNode::getCompactRepresentation(IncrementalMerkleTreeCompact &rep) const
     {
         // Do nothing at the bottom level
         if (this->isLeaf()) {

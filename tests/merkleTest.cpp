@@ -63,6 +63,38 @@ BOOST_AUTO_TEST_CASE( testRootOfTreeOfZerosIsZero ) {
     BOOST_CHECK( expected_root == actual_root );
 }
 
+void add_values_to_reference(IncrementalMerkleTree &tree, std::vector< std::vector<bool> > &values) {
+    IncrementalMerkleTree newtree(20);
+
+    if (newtree.insertVector(values) == false) {
+        BOOST_ERROR("Could not insert into the tree.");
+    }
+
+    tree.setTo(newtree);
+}
+
+BOOST_AUTO_TEST_CASE( test_add_values_to_reference ) {
+    IncrementalMerkleTree incTree(20);
+    IncrementalMerkleTree incTree2(20);
+
+    std::vector< std::vector<bool> > values;
+    constructNonzeroTestVector(values, 2);
+
+    if (incTree.insertVector(values) == false) {
+        BOOST_ERROR("Could not insert into the tree.");
+    }
+
+    add_values_to_reference(incTree2, values);
+
+    {
+        std::vector<bool> root1, root2;
+        incTree.getRootValue(root1);
+        incTree2.getRootValue(root2);
+
+        BOOST_CHECK(root1 == root2);
+    }
+}
+
 BOOST_AUTO_TEST_CASE( testRootOfTreeOfNonZeroIsNonZero ) {
     IncrementalMerkleTree incTree;
     std::vector< std::vector<bool> > values;
