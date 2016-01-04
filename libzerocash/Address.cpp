@@ -59,6 +59,8 @@ PublicAddress::PublicAddress(): a_pk(ZC_A_PK_SIZE) {
     this->pk_enc = "";
 }
 
+PublicAddress::PublicAddress(const std::vector<unsigned char>& a_pk, std::string& pk_enc) : a_pk(a_pk), pk_enc(pk_enc) {}
+
 PublicAddress::PublicAddress(const PrivateAddress& addr_sk): a_pk(ZC_A_PK_SIZE) {
     std::vector<bool> a_sk_bool(ZC_A_SK_SIZE * 8);
     convertBytesVectorToVector(addr_sk.getAddressSecret(), a_sk_bool);

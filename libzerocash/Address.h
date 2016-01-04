@@ -44,6 +44,7 @@ class PublicAddress {
 public:
     /* This constructor is to be used ONLY for deserialization. */
     PublicAddress();
+    PublicAddress(const std::vector<unsigned char>& a_pk, std::string& pk_enc);
     PublicAddress(const PrivateAddress& addr_sk);
 
     bool operator==(const PublicAddress& rhs) const;
