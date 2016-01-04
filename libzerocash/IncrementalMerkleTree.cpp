@@ -25,7 +25,7 @@ namespace libzerocash {
     // IncrementalMerkleTreeCompact class
     /////////////////////////////////////////////
 
-    std::vector<unsigned char> IncrementalMerkleTreeCompact::serialize() {
+    std::vector<unsigned char> IncrementalMerkleTreeCompact::serialize() const {
         /* Serialization format:
          *  treeHeight (4 bytes, big endian)
          *  hashList (ceil(treeHeight / 8) bytes)
@@ -203,7 +203,7 @@ namespace libzerocash {
     }
 
     bool
-    IncrementalMerkleTree::getRootValue(std::vector<bool>& r) {
+    IncrementalMerkleTree::getRootValue(std::vector<bool>& r) const {
 
         // Query the root for its hash
         this->root.getValue(r);
@@ -211,7 +211,7 @@ namespace libzerocash {
     }
 
 	bool
-    IncrementalMerkleTree::getRootValue(std::vector<unsigned char>& r) {
+    IncrementalMerkleTree::getRootValue(std::vector<unsigned char>& r) const {
 
 		// Create a temporary byte vector
 		std::vector<bool> tempR(r.size() * 8, 0);

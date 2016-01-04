@@ -45,7 +45,7 @@ public:
     std::vector< std::vector<unsigned char> > const& getHashVec() { return hashVec; }
     std::vector< bool > const& getHashList() { return hashList; }
 
-    std::vector<unsigned char> serialize();
+    std::vector<unsigned char> serialize() const;
     static IncrementalMerkleTreeCompact deserialize(const std::vector<unsigned char>& serialized);
 
 private:
@@ -84,8 +84,8 @@ public:
     bool isPruned() const { return subtreePruned; }
     bool hasFreeLeaves() const { return (!subtreeFull); }
     bool hasRightChildren() const { if (!right) return false; return true; }
-    void getValue(std::vector<bool> &r) { r = value; }
-    std::vector<bool>& getValue() { return value; }
+    void getValue(std::vector<bool> &r) const { r = value; }
+    const std::vector<bool>& getValue() const { return value; }
 
     bool checkIfNodeFull();
     void updateHashValue();
@@ -115,12 +115,12 @@ public:
 	bool insertElement(const std::vector<unsigned char> &hashV, std::vector<unsigned char> &index);
     bool insertVector(std::vector< std::vector<bool> > &valueVector);
     bool getWitness(const std::vector<bool> &index, merkle_authentication_path &witness);
-    bool getRootValue(std::vector<bool>& r);
-	bool getRootValue(std::vector<unsigned char>& r);
+    bool getRootValue(std::vector<bool>& r) const;
+	bool getRootValue(std::vector<unsigned char>& r) const;
 	std::vector<unsigned char>getRoot();
     bool prune();
     IncrementalMerkleTreeCompact getCompactRepresentation() const;
-    std::vector<unsigned char> serialize() {
+    std::vector<unsigned char> serialize() const {
         auto compact = getCompactRepresentation();
         return compact.serialize();
     }
