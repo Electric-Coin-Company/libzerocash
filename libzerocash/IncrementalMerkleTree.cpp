@@ -383,7 +383,7 @@ namespace libzerocash {
 				std::fill (witness.at(nodeDepth).begin(), witness.at(nodeDepth).end(), false);
 			} else {
 				this->right->getValue(witness.at(nodeDepth));
-				printVectorAsHex(witness.at(nodeDepth));
+				//printVectorAsHex(witness.at(nodeDepth));
 			}
 
             // Recurse on the left node
