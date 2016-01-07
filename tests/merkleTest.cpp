@@ -45,17 +45,6 @@ void constructZeroTestVector(std::vector< std::vector<bool> > &values, uint32_t 
     }
 }
 
-size_t countOnes(std::vector<bool> bits)
-{
-    size_t count = 0;
-    for (size_t i = 0; i < bits.size(); i++) {
-        if (bits.at(i)) {
-            count++;
-        }
-    }
-    return count;
-}
-
 BOOST_AUTO_TEST_CASE( testRootOfTreeOfZerosIsZero ) {
     IncrementalMerkleTree incTree;
     std::vector< std::vector<bool> > values;
@@ -72,6 +61,38 @@ BOOST_AUTO_TEST_CASE( testRootOfTreeOfZerosIsZero ) {
 
     std::vector<bool> expected_root(32*8, 0);
     BOOST_CHECK( expected_root == actual_root );
+}
+
+void add_values_to_reference(IncrementalMerkleTree &tree, std::vector< std::vector<bool> > &values) {
+    IncrementalMerkleTree newtree(20);
+
+    if (newtree.insertVector(values) == false) {
+        BOOST_ERROR("Could not insert into the tree.");
+    }
+
+    tree.setTo(newtree);
+}
+
+BOOST_AUTO_TEST_CASE( test_add_values_to_reference ) {
+    IncrementalMerkleTree incTree(20);
+    IncrementalMerkleTree incTree2(20);
+
+    std::vector< std::vector<bool> > values;
+    constructNonzeroTestVector(values, 2);
+
+    if (incTree.insertVector(values) == false) {
+        BOOST_ERROR("Could not insert into the tree.");
+    }
+
+    add_values_to_reference(incTree2, values);
+
+    {
+        std::vector<bool> root1, root2;
+        incTree.getRootValue(root1);
+        incTree2.getRootValue(root2);
+
+        BOOST_CHECK(root1 == root2);
+    }
 }
 
 BOOST_AUTO_TEST_CASE( testRootOfTreeOfNonZeroIsNonZero ) {
@@ -92,11 +113,23 @@ BOOST_AUTO_TEST_CASE( testRootOfTreeOfNonZeroIsNonZero ) {
     BOOST_CHECK( expected_root != actual_root );
 }
 
+BOOST_AUTO_TEST_CASE( testSerializationEdgeCase ) {
+
+}
+
 BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
     for (uint32_t num_entries = 0; num_entries < 100; num_entries++) {
+        size_t test_depth = 64;
+
+        if (num_entries == 2) {
+            // This is a particular failure I'm testing with weird
+            // padding caused by this depth.
+            test_depth = 20;
+        }
+
         std::vector< std::vector<bool> > values;
         std::vector<bool> root1, root2;
-        IncrementalMerkleTree incTree(64);
+        IncrementalMerkleTree incTree(test_depth);
 
         constructNonzeroTestVector(values, num_entries);
 
@@ -105,7 +138,7 @@ BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
 
         IncrementalMerkleTreeCompact compact = incTree.getCompactRepresentation();
 
-        BOOST_REQUIRE( compact.getTreeHeight() == 64 );
+        BOOST_REQUIRE( compact.getTreeHeight() == test_depth );
 
         // Calculate what the path to the next-added element should be.
         std::vector<unsigned char> path_bytes(8);
@@ -113,12 +146,20 @@ BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
         libzerocash::convertIntToBytesVector(num_entries, path_bytes);
         libzerocash::convertBytesVectorToVector(path_bytes, path_bits);
 
-        // Make sure the paths match.
-        BOOST_REQUIRE( compact.getHashList() == path_bits );
-        BOOST_REQUIRE( compact.getHashListBytes() == path_bytes );
+        if (test_depth == 64) {
+            // Make sure the paths match.
+            BOOST_REQUIRE( compact.getHashList() == path_bits );
+        }
 
         // Make sure there's a hash for every '1' bit down the path.
-        BOOST_REQUIRE( compact.getHashVec().size() == countOnes(path_bits) );
+        BOOST_REQUIRE( compact.getHashVec().size() == libzerocash::countOnes(path_bits) );
+
+        /* Test serializing and deserializing. */
+        std::vector<unsigned char> serializedCompact = compact.serialize();
+        IncrementalMerkleTreeCompact deserializedCompact = IncrementalMerkleTreeCompact::deserialize(serializedCompact);
+        BOOST_REQUIRE(compact.getTreeHeight() == deserializedCompact.getTreeHeight());
+        BOOST_REQUIRE(compact.getHashList() == deserializedCompact.getHashList());
+        BOOST_REQUIRE(compact.getHashVec() == deserializedCompact.getHashVec());
 
         // Make sure 'restoring' the tree results in the same root.
         IncrementalMerkleTree newTree(compact);
@@ -126,4 +167,33 @@ BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
         incTree.getRootValue(root2);
         BOOST_REQUIRE( root1 == root2 );
     }
+}
+
+BOOST_AUTO_TEST_CASE( testCompactDeserializationFailures ) {
+    IncrementalMerkleTree incTree(64);
+    std::vector< std::vector<bool> > values;
+    constructNonzeroTestVector(values, 5);
+    BOOST_REQUIRE( incTree.insertVector(values) );
+    BOOST_REQUIRE( incTree.prune() );
+    IncrementalMerkleTreeCompact compact = incTree.getCompactRepresentation();
+
+    /* Base the following tests off of this valid serialization. */
+    std::vector<unsigned char> serialized = compact.serialize();
+
+    /* Should fail if we truncate any number of bytes off the end. */
+    for (size_t trunc_len = 0; trunc_len < serialized.size(); trunc_len++) {
+        std::vector<unsigned char> truncated(serialized.begin(), serialized.begin() + trunc_len);
+        BOOST_CHECK_THROW(
+            IncrementalMerkleTreeCompact::deserialize(truncated),
+            std::out_of_range
+        );
+    }
+
+    /* Should fail if we append any number of extra bytes on the end. */
+    std::vector<unsigned char> extra_byte = serialized;
+    extra_byte.push_back(0x00);
+    BOOST_CHECK_THROW(
+        IncrementalMerkleTreeCompact::deserialize(extra_byte),
+        std::runtime_error
+    );
 }

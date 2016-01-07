@@ -330,5 +330,17 @@ bool VectorIsZero(const std::vector<bool> test) {
 	return (test.end() == std::find(test.begin(), test.end(), true));
 }
 
+size_t countOnes(const std::vector<bool>& vec) {
+    return count(vec.begin(), vec.end(), true);
+}
+
+std::vector<unsigned char> vectorSlice(const std::vector<unsigned char>& vec, size_t start, size_t length) {
+    std::vector<unsigned char> slice(length);
+    for (size_t i = 0; i < length; i++) {
+        slice.at(i) = vec.at(start + i);
+    }
+    return slice;
+}
+
 } /* namespace libzerocash */
 

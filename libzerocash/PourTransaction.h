@@ -18,6 +18,9 @@
 #include "PourInput.h"
 #include "PourOutput.h"
 #include <stdexcept>
+#include <bitset>
+
+#include <boost/array.hpp>
 
 typedef std::vector<unsigned char> CoinCommitmentValue;
 
@@ -26,6 +29,7 @@ namespace libzerocash {
 /***************************** Pour transaction ******************************/
 
 class PourTransaction {
+friend class PourProver;
 public:
     PourTransaction();
     PourTransaction(ZerocashParams& params,
@@ -104,7 +108,7 @@ public:
      * @return ture if correct, false otherwise.
      */
     bool verify(ZerocashParams& params,
-                std::vector<unsigned char> &pubkeyHash,
+                const std::vector<unsigned char> &pubkeyHash,
                 const MerkleRootType &merkleRoot) const;
 
     const std::vector<unsigned char>& getSpentSerial1() const;
@@ -130,6 +134,48 @@ public:
 
     uint64_t getPublicValueOut() const;
 
+    std::string unpack(boost::array<std::vector<unsigned char>, 2>& serials,
+                boost::array<std::vector<unsigned char>, 2>& commitments,
+                boost::array<std::vector<unsigned char>, 2>& macs,
+                boost::array<std::string, 2>& ciphertexts
+               ) const {
+        serials[0] = this->serialNumber_1;
+        serials[1] = this->serialNumber_2;
+        commitments[0] = this->cm_1.getCommitmentValue();
+        commitments[1] = this->cm_2.getCommitmentValue();
+        macs[0] = this->MAC_1;
+        macs[1] = this->MAC_2;
+        ciphertexts[0] = this->ciphertext_1;
+        ciphertexts[1] = this->ciphertext_2;
+
+        return this->zkSNARK;
+    }
+
+    // just hashes a few fields to see if integrity is correct.
+    // useful for debugging since there's such bad error handling
+    // currently
+    void debug_print() {
+        #define DEBUG_PRINT_POUR_FIELD(X, NAME) {\
+            std::hash<std::string> h; \
+            std::cout << NAME << ": " << h(std::string(X.begin(), X.end())) << std::endl;\
+        }
+
+        DEBUG_PRINT_POUR_FIELD(publicOldValue, "publicOldValue");
+        DEBUG_PRINT_POUR_FIELD(publicNewValue, "publicNewValue");
+        DEBUG_PRINT_POUR_FIELD(serialNumber_1, "serialNumber_1");
+        DEBUG_PRINT_POUR_FIELD(serialNumber_2, "serialNumber_2");
+        {
+            auto v = cm_1.getCommitmentValue();
+            DEBUG_PRINT_POUR_FIELD(v, "cm_1");
+        }
+        {
+            auto v = cm_2.getCommitmentValue();
+            DEBUG_PRINT_POUR_FIELD(v, "cm_2");
+        }
+        DEBUG_PRINT_POUR_FIELD(MAC_1, "MAC_1");
+        DEBUG_PRINT_POUR_FIELD(MAC_2, "MAC_2");
+        
+    }
 
 private:
 

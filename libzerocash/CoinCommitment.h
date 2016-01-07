@@ -21,6 +21,7 @@ namespace libzerocash {
 class CoinCommitment {
 
 friend class PourTransaction;
+friend class PourProver;
 
 public:
 	CoinCommitment();

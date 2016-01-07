@@ -52,6 +52,10 @@ public:
 
 	uint64_t getValue() const;
 
+    const std::vector<unsigned char>& getRho() const;
+
+    const std::vector<unsigned char>& getR() const;
+
 private:
 	PublicAddress addr_pk;
     CoinCommitment cm;
@@ -62,9 +66,6 @@ private:
 
 	const std::vector<unsigned char>& getInternalCommitment() const;
 
-    const std::vector<unsigned char>& getRho() const;
-
-    const std::vector<unsigned char>& getR() const;
     void computeCommitments(std::vector<unsigned char>& a_pk);
 };
 

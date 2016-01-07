@@ -354,7 +354,7 @@ void PourTransaction::init(uint16_t version_num,
 }
 
 bool PourTransaction::verify(ZerocashParams& params,
-                             std::vector<unsigned char> &pubkeyHash,
+                             const std::vector<unsigned char> &pubkeyHash,
                              const MerkleRootType &merkleRoot) const
 {
 	if(this->version == 0){
