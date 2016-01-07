@@ -113,11 +113,23 @@ BOOST_AUTO_TEST_CASE( testRootOfTreeOfNonZeroIsNonZero ) {
     BOOST_CHECK( expected_root != actual_root );
 }
 
+BOOST_AUTO_TEST_CASE( testSerializationEdgeCase ) {
+
+}
+
 BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
     for (uint32_t num_entries = 0; num_entries < 100; num_entries++) {
+        size_t test_depth = 64;
+
+        if (num_entries == 2) {
+            // This is a particular failure I'm testing with weird
+            // padding caused by this depth.
+            test_depth = 20;
+        }
+
         std::vector< std::vector<bool> > values;
         std::vector<bool> root1, root2;
-        IncrementalMerkleTree incTree(64);
+        IncrementalMerkleTree incTree(test_depth);
 
         constructNonzeroTestVector(values, num_entries);
 
@@ -126,7 +138,7 @@ BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
 
         IncrementalMerkleTreeCompact compact = incTree.getCompactRepresentation();
 
-        BOOST_REQUIRE( compact.getTreeHeight() == 64 );
+        BOOST_REQUIRE( compact.getTreeHeight() == test_depth );
 
         // Calculate what the path to the next-added element should be.
         std::vector<unsigned char> path_bytes(8);
@@ -134,8 +146,10 @@ BOOST_AUTO_TEST_CASE( testCompactRepresentation ) {
         libzerocash::convertIntToBytesVector(num_entries, path_bytes);
         libzerocash::convertBytesVectorToVector(path_bytes, path_bits);
 
-        // Make sure the paths match.
-        BOOST_REQUIRE( compact.getHashList() == path_bits );
+        if (test_depth == 64) {
+            // Make sure the paths match.
+            BOOST_REQUIRE( compact.getHashList() == path_bits );
+        }
 
         // Make sure there's a hash for every '1' bit down the path.
         BOOST_REQUIRE( compact.getHashVec().size() == libzerocash::countOnes(path_bits) );

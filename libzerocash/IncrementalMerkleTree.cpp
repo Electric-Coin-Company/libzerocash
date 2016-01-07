@@ -80,7 +80,9 @@ namespace libzerocash {
         currentPos += hashListBytesLength;
         convertBytesVectorToVector(hashListBytes, deserialized.hashList);
         /* Remove the multiple-of-8-bits padding. */
-        deserialized.hashList.resize(deserialized.treeHeight);
+        deserialized.hashList.erase(deserialized.hashList.begin(),
+                                    deserialized.hashList.end() - deserialized.treeHeight
+                                   );
 
         /* hashVec */
         size_t hashVecSize = countOnes(deserialized.hashList);
